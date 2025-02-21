@@ -350,50 +350,78 @@ app.delete('/products/:id', authenticateToken, async (req, res) => {
     }
 });
 
-// Adicionar produto aos favoritos
+// Adicionar favorito
 app.post('/favorites', authenticateToken, async (req, res) => {
     try {
         const { productId } = req.body;
+        console.log('Adicionando favorito:', { userId: req.user.id, productId });
         if (!productId) {
-            return res.status(400).json({ error: 'ID do produto é obrigatório' });
+            return res.status(400).json({ error: 'productId é obrigatório' });
         }
 
-        const favorite = await prisma.favorite.upsert({
-            where: { userId_productId: { userId: req.user.id, productId: parseInt(productId) } },
-            update: {}, // Não atualiza se já existe
-            create: {
+        const favorite = await prisma.favorite.create({
+            data: {
                 userId: req.user.id,
                 productId: parseInt(productId),
             },
         });
-
-        res.status(201).json({ message: 'Produto adicionado aos favoritos', favorite });
+        res.status(201).json(favorite);
     } catch (error) {
         console.error('Erro ao adicionar favorito:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
-
 // Remover produto dos favoritos
 app.delete('/favorites/:productId', authenticateToken, async (req, res) => {
     try {
         const { productId } = req.params;
-        await prisma.favorite.delete({
-            where: { userId_productId: { userId: req.user.id, productId: parseInt(productId) } },
+        console.log('Removendo favorito:', { userId: req.user.id, productId });
+
+        // Validação básica
+        if (!productId || isNaN(parseInt(productId))) {
+            console.log('productId inválido:', productId);
+            return res.status(400).json({ error: 'productId inválido' });
+        }
+
+        // Verifica se o favorito existe antes de tentar remover
+        const existingFavorite = await prisma.favorite.findUnique({
+            where: {
+                userId_productId: {
+                    userId: req.user.id,
+                    productId: parseInt(productId),
+                },
+            },
         });
+
+        if (!existingFavorite) {
+            console.log('Favorito não encontrado:', { userId: req.user.id, productId });
+            return res.status(404).json({ error: 'Favorito não encontrado' });
+        }
+
+        // Remove o favorito
+        await prisma.favorite.delete({
+            where: {
+                userId_productId: {
+                    userId: req.user.id,
+                    productId: parseInt(productId),
+                },
+            },
+        });
+
+        console.log('Favorito removido com sucesso:', { userId: req.user.id, productId });
         res.json({ message: 'Produto removido dos favoritos' });
     } catch (error) {
         console.error('Erro ao remover favorito:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
-
-// Listar favoritos do usuário
+// Listar favoritos
 app.get('/favorites', authenticateToken, async (req, res) => {
     try {
+        console.log('Buscando favoritos para usuário:', req.user.id);
         const favorites = await prisma.favorite.findMany({
             where: { userId: req.user.id },
-            include: { product: { include: { user: { select: { id: true, name: true } } } } },
+            include: { product: true },
         });
         res.json(favorites);
     } catch (error) {

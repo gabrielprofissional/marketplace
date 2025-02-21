@@ -36,12 +36,12 @@ export default function Marketplace() {
   const [image, setImage] = useState(null)
   const [showForm, setShowForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
-  const [sort, setSort] = useState('created_at')
   const [user, setUser] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
   const [favorites, setFavorites] = useState([])
+  const [minPrice, setMinPrice] = useState('')
+  const [maxPrice, setMaxPrice] = useState('')
+  const [sort, setSort] = useState('created_at')
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function Marketplace() {
 
   const fetchProducts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/products', {
+      const response = await axios.get(`http://localhost:5000/products`, {
         params: { page, limit, minPrice, maxPrice, sort },
       })
       setProducts(response.data.products)
@@ -85,7 +85,7 @@ export default function Marketplace() {
       setFavorites(response.data.map((fav) => fav.productId))
     } catch (error) {
       console.error('Erro ao buscar favoritos:', error)
-      toast.error('Erro ao carregar favoritos.')
+      toast.error('Erro ao carregar favoritos!')
     }
   }
 
@@ -155,26 +155,25 @@ export default function Marketplace() {
     }
   }
 
-  const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= Math.ceil(total / limit)) {
-      setPage(newPage)
-    }
-  }
-
-  const handleFavorite = async (productId, isFavorited) => {
+  const handleFavorite = async (productId) => {
     try {
-      if (isFavorited) {
+      if (favorites.includes(productId)) {
         await axios.delete(`http://localhost:5000/favorites/${productId}`)
-        setFavorites(favorites.filter((id) => id !== productId))
         toast.success('Produto removido dos favoritos!')
       } else {
         await axios.post('http://localhost:5000/favorites', { productId })
-        setFavorites([...favorites, productId])
         toast.success('Produto adicionado aos favoritos!')
       }
+      fetchFavorites()
     } catch (error) {
       console.error('Erro ao manipular favorito:', error)
-      toast.error('Erro ao atualizar favoritos!')
+      toast.error('Erro ao manipular favorito!')
+    }
+  }
+
+  const handlePageChange = (newPage) => {
+    if (newPage > 0 && newPage <= Math.ceil(total / limit)) {
+      setPage(newPage)
     }
   }
 
@@ -250,6 +249,7 @@ export default function Marketplace() {
               <option value="price">Menor preço</option>
               <option value="-price">Maior preço</option>
             </select>
+            <button onClick={fetchProducts}>Filtrar</button>
           </div>
 
           {filteredProducts.length > 0 ? (
@@ -265,21 +265,6 @@ export default function Marketplace() {
                   <p className="price">R$ {product.price.toFixed(2)}</p>
                   {user && (
                     <div>
-                      <button
-                        onClick={() =>
-                          handleFavorite(
-                            product.id,
-                            favorites.includes(product.id)
-                          )
-                        }
-                        className={
-                          favorites.includes(product.id) ? 'favorited' : ''
-                        }
-                      >
-                        {favorites.includes(product.id)
-                          ? '★ Favoritado'
-                          : '☆ Favoritar'}
-                      </button>
                       {product.userId === user.id && (
                         <>
                           <button onClick={() => handleEdit(product)}>
@@ -290,6 +275,11 @@ export default function Marketplace() {
                           </button>
                         </>
                       )}
+                      <button onClick={() => handleFavorite(product.id)}>
+                        {favorites.includes(product.id)
+                          ? 'Remover Favorito'
+                          : 'Favoritar'}
+                      </button>
                     </div>
                   )}
                 </div>
