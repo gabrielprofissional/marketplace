@@ -1,61 +1,53 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
-function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Login() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
-  const handleLogin = async (e) => {
-    e.preventDefault();
+  axios.defaults.withCredentials = true // Novo: permite enviar/receber cookies
 
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     try {
-      const response = await fetch('http://localhost:3000/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      console.log('Usuário logado com sucesso:', data);
-    } catch (error) {
-      console.error('Erro ao fazer login:', error.message);
+      const response = await axios.post('http://localhost:5000/login', {
+        email,
+        password,
+      })
+      // O token é automaticamente definido como cookie pelo backend
+      navigate('/marketplace')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erro ao fazer login')
     }
-  };
+  }
 
   return (
-    <div className="login-form">
-      <h2>Login</h2>
-      <form onSubmit={handleLogin}>
-        <div>
-          <label htmlFor="email">Email:</label>
-          <input
-            type="email"
-            id="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-          />
-        </div>
-        <div>
-          <label htmlFor="password">Senha:</label>
-          <input
-            type="password"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit">Login</button>
+    <div>
+      <h1>Login</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+        />
+        <input
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+        />
+        <button type="submit">Entrar</button>
       </form>
+      <p>
+        Não tem conta? <a href="/register">Registre-se</a>
+      </p>
     </div>
-  );s
+  )
 }
-
-export default Login;

@@ -13,6 +13,7 @@ model User {
   email     String   @unique @db.VarChar(191)
   password  String   @db.VarChar(191)
   createdAt DateTime @default(now()) @db.DateTime(3)
+  products  Product[] // Relacionamento com produtos
 }
 
 model Product {
@@ -22,4 +23,16 @@ model Product {
   price       Float
   image       String
   created_at  DateTime @default(now())
+  userId      Int      // ID do usuário que cadastrou
+  user        User     @relation(fields: [userId], references: [id])
+}
+
+
+model Favorite {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  productId Int
+  user      User     @relation(fields: [userId], references: [id])
+  product   Product  @relation(fields: [productId], references: [id])
+  @@unique([userId, productId]) // Evita duplicatas
 }

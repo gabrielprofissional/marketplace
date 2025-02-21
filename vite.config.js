@@ -1,9 +1,12 @@
 import { defineConfig } from 'vite'
 
-export default defineConfig({
+export default {
   server: {
     proxy: {
-      '/api': 'http://localhost:3000' // Aqui você redireciona todas as requisições /api para o backend
-    }
-  }
-})
+      '/uploads': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
+};
