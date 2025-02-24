@@ -43,7 +43,8 @@ export default function Marketplace() {
   const [maxPrice, setMaxPrice] = useState('')
   const [sort, setSort] = useState('created_at')
   const [showFavorites, setShowFavorites] = useState(false)
-  const [selectedProduct, setSelectedProduct] = useState(null) // Novo estado para produto selecionado
+  const [showProfile, setShowProfile] = useState(false) // Novo estado para "Meu Perfil"
+  const [selectedProduct, setSelectedProduct] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -103,10 +104,7 @@ export default function Marketplace() {
     formData.append('name', name)
     formData.append('description', description)
     formData.append('price', parseFloat(price))
-    if (image) {
-      console.log('Imagem selecionada:', image)
-      formData.append('image', image)
-    }
+    if (image) formData.append('image', image)
 
     try {
       if (editProductId) {
@@ -220,10 +218,9 @@ export default function Marketplace() {
           {user ? (
             <div>
               <span>Bem-vindo, {user.name}</span>
-              <button onClick={() => setShowFavorites(true)}>
-                Meus Favoritos
+              <button className="logout-button" onClick={handleLogout}>
+                Logout
               </button>
-              <button onClick={handleLogout}>Logout</button>
             </div>
           ) : (
             <button onClick={() => navigate('/login')}>Login</button>
@@ -234,24 +231,29 @@ export default function Marketplace() {
       <div className="marketplace-content">
         <aside className="sidebar">
           {user && (
-            <button
-              className={`add-button ${products.length === 0 ? 'pulse' : ''}`}
-              onClick={() => {
-                setEditProductId(null)
-                setName('')
-                setDescription('')
-                setPrice('')
-                setImage(null)
-                setShowForm(true)
-              }}
-            >
-              Adicionar Produto
-            </button>
+            <>
+              <button
+                className={`add-button ${products.length === 0 ? 'pulse' : ''}`}
+                onClick={() => {
+                  setEditProductId(null)
+                  setName('')
+                  setDescription('')
+                  setPrice('')
+                  setImage(null)
+                  setShowForm(true)
+                }}
+              >
+                Adicionar Produto
+              </button>
+              <button onClick={() => setShowFavorites(true)}>
+                Meus Favoritos
+              </button>
+              <button onClick={() => setShowProfile(true)}>Meu Perfil</button>
+            </>
           )}
         </aside>
 
         <main className="product-area">
-          {/* Filtros Avançados */}
           <div className="filters">
             <input
               type="number"
@@ -279,7 +281,7 @@ export default function Marketplace() {
                 <div
                   key={product.id}
                   className="product-card"
-                  onClick={() => handleProductClick(product.id)} // Clique para detalhes
+                  onClick={() => handleProductClick(product.id)}
                   style={{ cursor: 'pointer' }}
                 >
                   <img
@@ -291,8 +293,6 @@ export default function Marketplace() {
                   <p className="price">R$ {product.price.toFixed(2)}</p>
                   {user && (
                     <div onClick={(e) => e.stopPropagation()}>
-                      {' '}
-                      {/* Impede clique nos botões de abrir detalhes */}
                       {product.userId === user.id && (
                         <>
                           <button onClick={() => handleEdit(product)}>
@@ -325,21 +325,16 @@ export default function Marketplace() {
             <button
               onClick={() => handlePageChange(page - 1)}
               disabled={page === 1}
-            >
-              Anterior
-            </button>
+            ></button>
             <span>
               Página {page} de {Math.ceil(total / limit)}
             </span>
             <button
               onClick={() => handlePageChange(page + 1)}
               disabled={page === Math.ceil(total / limit)}
-            >
-              Próximo
-            </button>
+            ></button>
           </div>
 
-          {/* Seção de Favoritos */}
           {showFavorites && user && (
             <div className="favorites-section">
               <h2>Meus Favoritos</h2>
@@ -364,6 +359,27 @@ export default function Marketplace() {
                 <p>Nenhum produto favoritado ainda.</p>
               )}
               <button onClick={() => setShowFavorites(false)}>Fechar</button>
+            </div>
+          )}
+
+          {showProfile && user && (
+            <div className="profile-section">
+              <h2>Meu Perfil</h2>
+              <p>
+                <strong>Nome:</strong> {user.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {user.email}
+              </p>
+              <p>
+                <strong>Produtos Cadastrados:</strong>{' '}
+                {products.filter((p) => p.userId === user.id).length}
+              </p>
+              <p>
+                <strong>Vendas Realizadas:</strong> 0 (A implementar)
+              </p>{' '}
+              {/* Placeholder */}
+              <button onClick={() => setShowProfile(false)}>Fechar</button>
             </div>
           )}
 

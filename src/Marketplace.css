@@ -89,6 +89,14 @@
   transform: translateY(-2px);
 }
 
+.logout-button {
+  font-size: 12px;
+  padding: 5px 10px;
+  background-color: #ccc;
+  border: none;
+  cursor: pointer;
+}
+
 .marketplace-content {
   display: flex;
   height: calc(100vh - 80px);
@@ -103,10 +111,11 @@
   top: 0;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
   display: flex;
-  align-items: center;
+  flex-direction: column; /* Alinha os botões verticalmente */
+  gap: 15px; /* Espaçamento entre os botões */
 }
 
-.add-button {
+.sidebar button {
   background-color: #ecf0f1;
   border: 1px solid #dfe6e9;
   border-radius: 8px;
@@ -116,22 +125,14 @@
   color: #2c3e50;
   cursor: pointer;
   width: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  text-align: center;
   transition:
     background-color 0.3s,
     border-color 0.3s,
     transform 0.2s;
 }
 
-.add-button::before {
-  content: '+';
-  font-size: 20px;
-}
-
-.add-button:hover {
+.sidebar button:hover {
   background-color: #dfe6e9;
   border-color: #3498db;
   transform: translateY(-2px);
@@ -314,26 +315,30 @@
   transform: scale(0.9);
   opacity: 0;
   transition: all 0.3s ease-in-out;
-  text-align: center; /* Centraliza texto e elementos inline */
+  text-align: center;
 }
+
 .modal-content img {
   max-width: 300px;
-  width: 100%; /* Garante responsividade */
-  margin: 0 auto 20px; /* Centraliza horizontalmente e adiciona margem inferior */
-  display: block; /* Necessário para margin auto funcionar */
+  width: 100%;
+  margin: 0 auto 20px;
+  display: block;
   border-radius: 8px;
 }
+
 .modal-content p {
   font-size: 16px;
   color: #2c3e50;
   margin-bottom: 15px;
 }
+
 .modal-buttons {
   display: flex;
-  gap: 15px; /* Espaçamento básico entre botões */
+  gap: 15px;
   justify-content: center;
   margin-top: 20px;
 }
+
 .modal-content p strong {
   color: #34495e;
   font-weight: 600;
@@ -494,30 +499,60 @@
   align-items: center;
 }
 
+/* ... (outras regras permanecem iguais até .file-name) ... */
+
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
 .pagination button {
-  padding: 10px 20px;
+  width: 32px;
+  height: 32px;
   background-color: #3498db;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 50%;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition:
-    background-color 0.3s,
-    transform 0.2s;
+    background-color 0.3s ease,
+    transform 0.2s ease;
 }
 
 .pagination button:disabled {
   background-color: #95a5a6;
   cursor: not-allowed;
+  opacity: 0.7;
 }
 
 .pagination button:hover:not(:disabled) {
   background-color: #2980b9;
-  transform: translateY(-2px);
+  transform: scale(1.1);
 }
 
+.pagination span {
+  font-size: 14px;
+  color: #34495e;
+  font-weight: 600;
+}
+
+.pagination button:first-child::before {
+  content: '◄';
+}
+
+.pagination button:last-child::before {
+  content: '►';
+}
+
+/* ... (outras regras como .favorites-section em diante permanecem iguais) ... */
 .favorites-section {
   margin-top: 30px;
   padding: 25px;
@@ -539,6 +574,51 @@
   gap: 25px;
 }
 
+.profile-section {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+}
+
+.profile-section h2 {
+  margin-top: 0;
+  color: #34495e;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profile-section p {
+  margin: 10px 0;
+  font-size: 16px;
+  color: #2c3e50;
+}
+
+.profile-section button {
+  margin-top: 20px;
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.profile-section button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
 @media (max-width: 768px) {
   .marketplace-content {
     flex-direction: column;
@@ -547,6 +627,10 @@
     width: 100%;
     padding: 20px;
     box-shadow: none;
+    align-items: center; /* Centraliza os botões no mobile */
+  }
+  .sidebar button {
+    width: 80%; /* Reduz a largura dos botões no mobile */
   }
   .product-area {
     padding: 20px;
