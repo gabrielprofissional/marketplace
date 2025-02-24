@@ -1,37 +1,33 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'
+import axios from 'axios'
+import { useNavigate } from 'react-router-dom'
 
-function Register() {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+export default function Register() {
+  const [name, setName] = useState('')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
-  const handleRegister = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (e) => {
+    e.preventDefault()
     try {
-      const response = await fetch('http://localhost:3000/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error);
-      }
-
-      console.log('Usuário registrado com sucesso:', data);
-    } catch (error) {
-      console.error('Erro ao registrar usuário:', error.message);
+      await axios.post('http://localhost:5000/register', {
+        name,
+        email,
+        password,
+      })
+      navigate('/login')
+    } catch (err) {
+      setError(err.response?.data?.error || 'Erro ao registrar')
     }
-  };
+  }
 
   return (
-    <div className="register-form">
-      <h2>Registro</h2>
-      <form onSubmit={handleRegister}>
+    <div>
+      <h1>Registro</h1>
+      {error && <p style={{ color: 'red' }}>{error}</p>}
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="Nome"
@@ -41,7 +37,7 @@ function Register() {
         />
         <input
           type="email"
-          placeholder="E-mail"
+          placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
@@ -55,8 +51,9 @@ function Register() {
         />
         <button type="submit">Registrar</button>
       </form>
+      <p>
+        Já tem conta? <a href="/login">Faça login</a>
+      </p>
     </div>
-  );
+  )
 }
-
-export default Register;

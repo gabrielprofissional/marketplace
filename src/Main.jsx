@@ -7,7 +7,8 @@ import App from './App.jsx'
 import Register from './Register.jsx'
 import Login from './Login.jsx'
 import Portfolio from './Portfolio.jsx' // 🔹 Importamos a nova página
-import Marketplace from './marketplace.jsx'
+import Marketplace from './Marketplace.jsx'
+import SellerProfile from './SellerProfile' // Novo componente
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <Router>
@@ -17,6 +18,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/login" element={<Login />} />
         <Route path="/portfolio" element={<Portfolio />} />{' '}
         <Route path="/marketplace" element={<Marketplace />} />{' '}
+        <Route path="/users/:id" element={<SellerProfile />} />
         {/* 🔹 Adicionamos a nova rota */}
       </Routes>
     </Router>

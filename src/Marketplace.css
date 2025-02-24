@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700&display=swap');
 
 * {
   margin: 0;
@@ -9,41 +9,52 @@
 
 .marketplace {
   min-height: 100vh;
-  background-color: #ffffff;
+  background-color: #f7f8fa;
+  color: #2c3e50;
 }
 
 .marketplace-header {
   padding: 20px 40px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  background: #ffffff;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .header-content {
   display: flex;
   align-items: center;
-  justify-content: space-between; /* Alinha título à esquerda e busca à direita */
+  justify-content: space-between;
   max-width: 1200px;
   margin: 0 auto;
+  flex-wrap: wrap;
+}
+
+.header-content > div {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .marketplace-header h1 {
-  font-size: 24px;
-  color: #333;
+  font-size: 26px;
   font-weight: 700;
+  color: #34495e;
 }
 
 .search-bar {
   flex: 1;
   max-width: 400px;
+  margin: 0 20px;
 }
 
 .search-bar input {
   width: 100%;
-  padding: 10px 15px;
+  padding: 12px 20px;
   font-size: 16px;
-  border: 1px solid #e0e0e0;
-  border-radius: 20px;
+  border: 1px solid #dfe6e9;
+  border-radius: 25px;
   outline: none;
-  color: #666;
+  color: #2c3e50;
   background-color: #fff;
   transition:
     border-color 0.3s,
@@ -51,12 +62,31 @@
 }
 
 .search-bar input::placeholder {
-  color: #999;
+  color: #95a5a6;
 }
 
 .search-bar input:focus {
-  border-color: #4caf50;
-  box-shadow: 0 0 5px rgba(76, 175, 80, 0.2);
+  border-color: #3498db;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+}
+
+.header-content button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.header-content button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
 }
 
 .marketplace-content {
@@ -65,45 +95,46 @@
 }
 
 .sidebar {
-  width: 200px;
+  width: 220px;
   padding: 20px;
   background-color: #ffffff;
   height: 100%;
   position: sticky;
   top: 0;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
   display: flex;
   align-items: center;
 }
 
 .add-button {
-  background: none;
-  border: 1px solid #e0e0e0;
+  background-color: #ecf0f1;
+  border: 1px solid #dfe6e9;
   border-radius: 8px;
-  padding: 10px 20px;
+  padding: 12px 24px;
   font-size: 16px;
-  color: #666;
+  font-weight: 600;
+  color: #2c3e50;
   cursor: pointer;
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
   transition:
     background-color 0.3s,
-    color 0.3s,
-    border-color 0.3s;
+    border-color 0.3s,
+    transform 0.2s;
 }
 
 .add-button::before {
   content: '+';
-  font-size: 18px;
+  font-size: 20px;
 }
 
 .add-button:hover {
-  background-color: #f5f5f5;
-  border-color: #4caf50;
-  color: #333;
+  background-color: #dfe6e9;
+  border-color: #3498db;
+  transform: translateY(-2px);
 }
 
 .add-button.pulse {
@@ -127,6 +158,50 @@
   padding: 40px;
 }
 
+.filters {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 30px;
+  justify-content: center;
+  align-items: center;
+}
+
+.filters input,
+.filters select {
+  padding: 10px 15px;
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #2c3e50;
+  background-color: #fff;
+  transition: border-color 0.3s;
+}
+
+.filters input:focus,
+.filters select:focus {
+  border-color: #3498db;
+  outline: none;
+}
+
+.filters button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.filters button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -135,8 +210,8 @@
 
 .product-card {
   background: #ffffff;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid #dfe6e9;
+  border-radius: 10px;
   padding: 20px;
   text-align: center;
   transition:
@@ -146,7 +221,7 @@
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .product-card img {
@@ -159,100 +234,138 @@
 .product-card h2 {
   font-size: 18px;
   margin: 15px 0 10px;
-  color: #333;
+  color: #34495e;
+  font-weight: 600;
 }
 
 .product-card p {
-  color: #666;
+  color: #7f8c8d;
   font-size: 14px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .product-card .price {
   font-weight: 700;
-  color: #4caf50;
+  color: #e74c3c;
   font-size: 16px;
+}
+
+.product-card div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.product-card button {
+  padding: 8px 16px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.product-card button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
 }
 
 .no-products {
   text-align: center;
   font-size: 16px;
-  color: #666;
+  color: #7f8c8d;
   margin-top: 50px;
 }
 
-/* Fundo do modal */
 .modal {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(
-    0,
-    0,
-    0,
-    0.6
-  ); /* Escureci um pouco o fundo para mais contraste */
+  background: rgba(0, 0, 0, 0.6);
   display: flex;
   justify-content: center;
   align-items: center;
   opacity: 0;
-  visibility: hidden; /* Esconde o modal quando não está ativo */
+  visibility: hidden;
   transition: all 0.3s ease-in-out;
-  z-index: 1000; /* Garante que o modal fique acima de tudo */
+  z-index: 1000;
 }
 
-/* Modal visível */
 .modal.show-modal {
   opacity: 1;
   visibility: visible;
 }
 
-/* Conteúdo do modal */
 .modal-content {
   background: #ffffff;
-  padding: 30px; /* Mais espaço interno */
-  border-radius: 12px; /* Bordas mais suaves */
-  width: 450px; /* Um pouco mais largo para respirar */
+  padding: 30px;
+  border-radius: 12px;
+  width: 500px;
   max-width: 90%;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); /* Sombra mais pronunciada */
-  transform: scale(0.9); /* Começa um pouco menor */
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  transform: scale(0.9);
   opacity: 0;
   transition: all 0.3s ease-in-out;
+  text-align: center; /* Centraliza texto e elementos inline */
+}
+.modal-content img {
+  max-width: 300px;
+  width: 100%; /* Garante responsividade */
+  margin: 0 auto 20px; /* Centraliza horizontalmente e adiciona margem inferior */
+  display: block; /* Necessário para margin auto funcionar */
+  border-radius: 8px;
+}
+.modal-content p {
+  font-size: 16px;
+  color: #2c3e50;
+  margin-bottom: 15px;
+}
+.modal-buttons {
+  display: flex;
+  gap: 15px; /* Espaçamento básico entre botões */
+  justify-content: center;
+  margin-top: 20px;
+}
+.modal-content p strong {
+  color: #34495e;
+  font-weight: 600;
 }
 
-/* Animação ao abrir o modal */
 .modal.show-modal .modal-content {
   transform: scale(1);
   opacity: 1;
 }
 
-/* Título do modal */
 .modal-content h2 {
   margin-bottom: 25px;
-  color: #222; /* Cor mais escura e elegante */
-  font-size: 24px; /* Um pouco maior */
+  color: #34495e;
+  font-size: 24px;
   font-weight: 700;
   text-align: center;
 }
 
-/* Formulário */
 .modal-content form {
   display: flex;
   flex-direction: column;
-  gap: 20px; /* Mais espaçamento entre os campos */
+  gap: 20px;
 }
 
-/* Inputs e textarea */
 .modal-content input,
 .modal-content textarea {
-  padding: 12px 15px; /* Mais confortável */
-  border: 1px solid #ddd; /* Cinza mais suave */
-  border-radius: 8px; /* Bordas mais arredondadas */
+  padding: 12px 15px;
+  border: 1px solid #dfe6e9;
+  border-radius: 8px;
   font-size: 16px;
-  color: #333;
-  background-color: #fafafa; /* Fundo leve para destacar */
+  color: #2c3e50;
+  background-color: #fafafa;
   transition:
     border-color 0.3s,
     box-shadow 0.3s;
@@ -260,82 +373,93 @@
 
 .modal-content input:focus,
 .modal-content textarea:focus {
-  border-color: #4caf50; /* Verde consistente com o tema */
-  box-shadow: 0 0 8px rgba(76, 175, 80, 0.2);
+  border-color: #3498db;
+  box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
   outline: none;
 }
 
 .modal-content textarea {
   resize: vertical;
-  min-height: 120px; /* Um pouco mais alta */
+  min-height: 120px;
 }
 
-/* Input de arquivo */
 .modal-content input[type='file'] {
-  padding: 10px 0; /* Ajuste para o input de arquivo */
-  border: none; /* Remove a borda padrão */
+  padding: 10px 0;
+  border: none;
   background: none;
 }
 
-/* Botões */
 .form-buttons {
   display: flex;
-  gap: 15px; /* Mais espaço entre os botões */
-  margin-top: 10px;
+  gap: 15px;
+  margin-top: 20px;
 }
 
 .form-buttons button {
   flex: 1;
-  padding: 12px 20px; /* Botões mais altos e largos */
+  padding: 12px 20px;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
   font-weight: 600;
-  text-transform: uppercase; /* Adiciona um toque moderno */
+  text-transform: uppercase;
   transition: all 0.3s ease;
 }
 
-/* Botão de salvar */
 .form-buttons button[type='submit'] {
-  background-color: #4caf50;
+  background-color: #3498db;
   color: white;
 }
 
-/* Botão de cancelar */
 .form-buttons button[type='button'] {
-  background-color: #f5f5f5; /* Cinza mais claro */
-  color: #555;
-  border: 1px solid #ddd;
+  background-color: #ecf0f1;
+  color: #7f8c8d;
+  border: 1px solid #dfe6e9;
 }
 
-/* Hover dos botões */
 .form-buttons button[type='submit']:hover {
-  background-color: #45a049; /* Tom mais escuro no hover */
-  transform: translateY(-2px); /* Leve elevação */
-}
-
-.form-buttons button[type='button']:hover {
-  background-color: #e0e0e0;
+  background-color: #2980b9;
   transform: translateY(-2px);
 }
 
-/* Container do upload */
+.form-buttons button[type='button']:hover {
+  background-color: #dfe6e9;
+  transform: translateY(-2px);
+}
+
+.modal-content button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.modal-content button:hover {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
 .file-upload {
   display: flex;
   align-items: center;
   gap: 15px;
-  position: relative;
 }
 
-/* Label estilizado como botão */
 .file-label {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px; /* Espaço entre ícone e texto */
+  gap: 8px;
   padding: 12px 20px;
-  background-color: #4caf50;
+  background-color: #3498db;
   color: white;
   border-radius: 8px;
   font-size: 16px;
@@ -345,36 +469,97 @@
 }
 
 .file-label:hover {
-  background-color: #45a049; /* Tom mais escuro no hover */
+  background-color: #2980b9;
   transform: translateY(-2px);
 }
 
-/* Esconde o input padrão */
 #file-input {
-  display: none; /* Ou use hidden como no JSX */
+  display: none;
 }
 
-/* Mostra o nome do arquivo selecionado */
 .file-name {
   font-size: 14px;
-  color: #666;
+  color: #7f8c8d;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 200px; /* Limita o tamanho do texto */
+  max-width: 200px;
 }
 
-/* Responsividade */
+.pagination {
+  margin-top: 30px;
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  align-items: center;
+}
+
+.pagination button {
+  padding: 10px 20px;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.3s,
+    transform 0.2s;
+}
+
+.pagination button:disabled {
+  background-color: #95a5a6;
+  cursor: not-allowed;
+}
+
+.pagination button:hover:not(:disabled) {
+  background-color: #2980b9;
+  transform: translateY(-2px);
+}
+
+.favorites-section {
+  margin-top: 30px;
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.favorites-section h2 {
+  margin-bottom: 20px;
+  color: #34495e;
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.favorites-section .product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 25px;
+}
+
 @media (max-width: 768px) {
-  .modal-content {
-    width: 90%;
+  .marketplace-content {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: 100%;
+    padding: 20px;
+    box-shadow: none;
+  }
+  .product-area {
     padding: 20px;
   }
-  .modal-content h2 {
-    font-size: 20px;
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   }
-  .form-buttons {
+  .filters {
     flex-direction: column;
     gap: 10px;
   }
+}
+
+.Toastify__close-button {
+  display: none !important;
 }
