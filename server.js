@@ -46,11 +46,11 @@ app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
 }));
 app.use(cors(corsOptions));
-app.use(rateLimit({
+/*app.use(rateLimit({
     windowMs: 15 * 60 * 1000,
     max: 100,
     message: 'Muitas requisições, tente novamente mais tarde',
-}));
+}));*/
 app.use(express.json());
 app.use(cookieParser());
 
@@ -190,9 +190,8 @@ app.post('/refresh-token', (req, res) => {
 // Listar produtos com filtros avançados
 app.get('/products', async (req, res) => {
     try {
-        const page = parseInt(req.query.page) || 1;
-        const limit = parseInt(req.query.limit) || 10;
-        const skip = (page - 1) * limit;
+        const offset = parseInt(req.query.offset) || 0; // Ponto de início
+        const limit = parseInt(req.query.limit) || 10; // Quantidade por carga
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
         const sort = req.query.sort || 'created_at';
@@ -206,14 +205,15 @@ app.get('/products', async (req, res) => {
             : { [sort]: 'asc' };
 
         const products = await prisma.product.findMany({
-            skip,
+            skip: offset,
             take: limit,
             where,
             orderBy,
             include: { user: { select: { id: true, name: true } } },
         });
         const total = await prisma.product.count({ where });
-        res.json({ products, total, page, limit });
+
+        res.json({ products, total, offset, limit });
     } catch (error) {
         console.error('Erro ao listar produtos:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
@@ -470,6 +470,17 @@ app.get('/favorites', authenticateToken, async (req, res) => {
     } catch (error) {
         console.error('Erro ao listar favoritos:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// No arquivo do servidor (index.js ou similar)
+app.get('/categories', async (req, res) => {
+    try {
+        const categories = await prisma.category.findMany();
+        res.json(categories);
+    } catch (error) {
+        console.error('Erro ao buscar categorias:', error);
+        res.status(500).json({ error: 'Erro ao buscar categorias' });
     }
 });
 

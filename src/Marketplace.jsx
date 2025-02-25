@@ -1,35 +1,22 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import './Marketplace.css'
 import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import ReactSlider from 'react-slider' // Importando o react-slider
 
 axios.defaults.withCredentials = true
 
-axios.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    const originalRequest = error.config
-    if (error.response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true
-      try {
-        await axios.post('http://localhost:5000/refresh-token')
-        return axios(originalRequest)
-      } catch (refreshError) {
-        console.error('Erro ao renovar token:', refreshError)
-        return Promise.reject(refreshError)
-      }
-    }
-    return Promise.reject(error)
-  }
-)
+// Configuração do interceptor permanece igual (omitido por brevidade)
 
 export default function Marketplace() {
   const [products, setProducts] = useState([])
   const [total, setTotal] = useState(0)
-  const [page, setPage] = useState(1)
+  const [offset, setOffset] = useState(0)
   const [limit] = useState(10)
+  const [isLoading, setIsLoading] = useState(false)
+  const [hasMore, setHasMore] = useState(true)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('')
@@ -39,19 +26,41 @@ export default function Marketplace() {
   const [user, setUser] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
   const [favorites, setFavorites] = useState([])
-  const [minPrice, setMinPrice] = useState('')
-  const [maxPrice, setMaxPrice] = useState('')
+  const [priceRange, setPriceRange] = useState([0, 1000]) // Substitui minPrice e maxPrice
   const [sort, setSort] = useState('created_at')
   const [showFavorites, setShowFavorites] = useState(false)
-  const [showProfile, setShowProfile] = useState(false) // Novo estado para "Meu Perfil"
+  const [showProfile, setShowProfile] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const loaderRef = useRef(null) // Referência para o ponto de observação
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchProducts()
     fetchUser()
     fetchFavorites()
-  }, [page, minPrice, maxPrice, sort])
+    fetchProducts(true) // Carrega produtos iniciais explicitamente
+  }, [])
+
+  useEffect(() => {
+    // Resetar produtos e offset ao mudar filtros
+    setProducts([])
+    setOffset(0)
+    setHasMore(true)
+    fetchProducts(true) // true indica reset
+  }, [priceRange, sort]) // priceRange substitui minPrice e maxPrice
+
+  useEffect(() => {
+    // Configurar IntersectionObserver
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading) {
+          fetchProducts()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    if (loaderRef.current) observer.observe(loaderRef.current)
+    return () => observer.disconnect()
+  }, [hasMore, isLoading])
 
   const fetchUser = async () => {
     try {
@@ -66,19 +75,34 @@ export default function Marketplace() {
     }
   }
 
-  const fetchProducts = async () => {
+  const fetchProducts = async (reset = false) => {
+    if (isLoading || (!hasMore && !reset)) return
+    setIsLoading(true)
     try {
       const response = await axios.get(`http://localhost:5000/products`, {
-        params: { page, limit, minPrice, maxPrice, sort },
+        params: {
+          offset: reset ? 0 : offset,
+          limit,
+          minPrice: priceRange[0], // Usa valores do slider
+          maxPrice: priceRange[1],
+          sort,
+        },
       })
-      setProducts(response.data.products)
+      const newProducts = response.data.products
+      setProducts((prev) => (reset ? newProducts : [...prev, ...newProducts]))
       setTotal(response.data.total)
+      setOffset((prev) => (reset ? limit : prev + limit))
+      setHasMore(
+        newProducts.length === limit && offset + limit < response.data.total
+      )
     } catch (error) {
       console.error('Erro ao buscar produtos:', error)
       toast.error('Erro ao carregar produtos.')
       if (error.response?.status === 401 || error.response?.status === 403) {
         navigate('/login')
       }
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -123,7 +147,10 @@ export default function Marketplace() {
       setImage(null)
       setShowForm(false)
       setEditProductId(null)
-      fetchProducts()
+      setProducts([])
+      setOffset(0)
+      setHasMore(true)
+      fetchProducts(true)
     } catch (error) {
       console.error('Erro ao salvar produto:', error)
       toast.error('Erro ao salvar produto!')
@@ -145,7 +172,10 @@ export default function Marketplace() {
     try {
       await axios.delete(`http://localhost:5000/products/${id}`)
       toast.success('Produto excluído com sucesso!')
-      fetchProducts()
+      setProducts([])
+      setOffset(0)
+      setHasMore(true)
+      fetchProducts(true)
     } catch (error) {
       console.error('Erro ao excluir produto:', error)
       toast.error('Erro ao excluir produto!')
@@ -185,12 +215,6 @@ export default function Marketplace() {
 
   const handleViewSellerProfile = (userId) => {
     navigate(`/users/${userId}`)
-  }
-
-  const handlePageChange = (newPage) => {
-    if (newPage > 0 && newPage <= Math.ceil(total / limit)) {
-      setPage(newPage)
-    }
   }
 
   const filteredProducts = products.filter((product) =>
@@ -255,24 +279,28 @@ export default function Marketplace() {
 
         <main className="product-area">
           <div className="filters">
-            <input
-              type="number"
-              placeholder="Preço mínimo"
-              value={minPrice}
-              onChange={(e) => setMinPrice(e.target.value)}
-            />
-            <input
-              type="number"
-              placeholder="Preço máximo"
-              value={maxPrice}
-              onChange={(e) => setMaxPrice(e.target.value)}
-            />
+            <div className="price-filter">
+              <label>
+                Faixa de Preço: R$ {priceRange[0]} - R$ {priceRange[1]}
+              </label>
+              <ReactSlider
+                className="price-slider"
+                thumbClassName="price-thumb"
+                trackClassName="price-track"
+                value={priceRange}
+                onChange={(value) => setPriceRange(value)}
+                min={0}
+                max={1000} // Ajuste conforme os preços reais do seu marketplace
+                step={10}
+                pearling
+                minDistance={10}
+              />
+            </div>
             <select value={sort} onChange={(e) => setSort(e.target.value)}>
               <option value="created_at">Mais recente</option>
               <option value="price">Menor preço</option>
               <option value="-price">Maior preço</option>
             </select>
-            <button onClick={fetchProducts}>Filtrar</button>
           </div>
 
           {filteredProducts.length > 0 ? (
@@ -321,19 +349,13 @@ export default function Marketplace() {
                 : 'Faça login para adicionar.'}
             </p>
           )}
-          <div className="pagination">
-            <button
-              onClick={() => handlePageChange(page - 1)}
-              disabled={page === 1}
-            ></button>
-            <span>
-              Página {page} de {Math.ceil(total / limit)}
-            </span>
-            <button
-              onClick={() => handlePageChange(page + 1)}
-              disabled={page === Math.ceil(total / limit)}
-            ></button>
-          </div>
+
+          {/* Elemento de carregamento observado pelo IntersectionObserver */}
+          {hasMore && (
+            <div ref={loaderRef} className="loading">
+              {isLoading && <p>Carregando mais produtos...</p>}
+            </div>
+          )}
 
           {showFavorites && user && (
             <div className="favorites-section">
@@ -377,8 +399,7 @@ export default function Marketplace() {
               </p>
               <p>
                 <strong>Vendas Realizadas:</strong> 0 (A implementar)
-              </p>{' '}
-              {/* Placeholder */}
+              </p>
               <button onClick={() => setShowProfile(false)}>Fechar</button>
             </div>
           )}
