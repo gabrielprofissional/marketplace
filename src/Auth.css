@@ -1,0 +1,182 @@
+/* Estilos globais mínimos para body */
+body {
+  background: linear-gradient(
+    135deg,
+    #e8eef2 0%,
+    #f7f8fa 100%
+  ); /* Fundo suave com gradiente */
+  font-family: 'Open Sans', sans-serif;
+  color: #2c3e50;
+  margin: 0;
+}
+
+/* Estilos específicos para Auth */
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100vh;
+}
+
+.auth-box {
+  width: 420px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05); /* Sombra mais suave e profunda */
+  overflow: hidden;
+}
+
+.slider-toggle {
+  position: relative;
+  display: flex;
+  background: #f8fafc; /* Cor mais clara e limpa */
+}
+
+.toggle-btn {
+  flex: 1;
+  padding: 16px;
+  background: transparent;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #a0b1c0; /* Cinza suave para o inativo */
+  cursor: pointer;
+  z-index: 1;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  transition: color 0.4s ease; /* Apenas cor na transição */
+}
+
+.toggle-btn.active {
+  color: #ffffff; /* Branco puro para contraste no slider */
+}
+
+.slider {
+  position: absolute;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    135deg,
+    #4a90e2,
+    #357abd
+  ); /* Azul mais sofisticado */
+  border-radius: 20px 20px 0 0;
+  transition: transform 0.4s cubic-bezier(0.77, 0, 0.175, 1); /* Suavidade com elasticidade */
+  box-shadow: 0 4px 15px rgba(74, 144, 226, 0.25); /* Sombra sutil */
+}
+
+.slider.slide-left {
+  transform: translateX(0);
+}
+
+.slider.slide-right {
+  transform: translateX(100%);
+}
+
+.form-container {
+  padding: 40px;
+  background: #ffffff;
+  animation: fadeIn 0.4s ease; /* Fade sutil ao alternar */
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px); /* Deslocamento leve */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.auth-form {
+  opacity: 1;
+}
+
+.auth-form h2 {
+  text-align: center;
+  font-size: 28px;
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 35px;
+  letter-spacing: 0.8px;
+}
+
+.auth-form div {
+  margin-bottom: 25px;
+  position: relative;
+}
+
+.auth-form input {
+  width: 100%;
+  padding: 14px 0;
+  border: none;
+  border-bottom: 1.5px solid #e0e6ea; /* Linha mais fina e elegante */
+  font-size: 16px;
+  color: #2c3e50;
+  background: transparent;
+  transition: border-bottom-color 0.3s ease;
+}
+
+.auth-form input:focus {
+  border-bottom-color: #4a90e2; /* Azul mais vibrante */
+  outline: none;
+}
+
+.auth-form input::placeholder {
+  color: #a0b1c0; /* Placeholder mais suave */
+  font-weight: 400;
+}
+
+.auth-form button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #4a90e2, #357abd);
+  color: #ffffff;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  transition: background 0.3s ease; /* Apenas fundo na transição */
+}
+
+.auth-form button:hover {
+  background: linear-gradient(
+    135deg,
+    #357abd,
+    #2c6399
+  ); /* Escurece levemente */
+}
+
+.error {
+  text-align: center;
+  color: #e74c3c;
+  font-size: 13px;
+  margin-bottom: 20px;
+  font-weight: 500;
+  opacity: 0.85;
+}
+
+@media (max-width: 480px) {
+  .auth-box {
+    width: 90%;
+  }
+
+  .toggle-btn {
+    font-size: 14px;
+    padding: 14px;
+  }
+
+  .auth-form h2 {
+    font-size: 24px;
+  }
+
+  .form-container {
+    padding: 30px;
+  }
+}

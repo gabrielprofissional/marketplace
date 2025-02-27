@@ -455,11 +455,17 @@
   overflow-y: auto;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
 }
-
+.loading-text {
+  text-align: center;
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-top: 20px;
+}
 .modal-content img {
   max-width: 100%;
   height: auto;
-  margin: 0 auto 15px;
+  display: block; /* Faz a margem automática funcionar */
+  margin: 0 auto 15px; /* Centraliza horizontalmente */
   border-radius: 8px;
 }
 

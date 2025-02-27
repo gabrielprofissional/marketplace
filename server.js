@@ -69,23 +69,162 @@ const productSchema = Joi.object({
     description: Joi.string().min(3).max(500).required(),
     price: Joi.number().positive().required(),
 });
-
-// Middleware de autenticação
-const authenticateToken = (req, res, next) => {
+// Middleware para verificar se é admin
+const authenticateAdmin = async (req, res, next) => {
     const token = req.cookies.token;
-    console.log('Token recebido:', token);
     if (!token) return res.status(401).json({ error: 'Acesso negado' });
 
-    jwt.verify(token, SECRET_KEY, (err, user) => {
-        if (err) {
-            console.error('Erro ao verificar token:', err);
-            return res.status(403).json({ error: 'Token inválido' });
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const user = await prisma.user.findUnique({
+            where: { id: decoded.id },
+            select: { id: true, email: true, isAdmin: true },
+        });
+
+        if (!user || !user.isAdmin) {
+            return res.status(403).json({ error: 'Acesso restrito a administradores' });
         }
-        console.log('Usuário decodificado:', user);
+
         req.user = user;
         next();
-    });
+    } catch (err) {
+        console.error('Erro ao verificar admin:', err);
+        return res.status(403).json({ error: 'Token inválido ou acesso negado' });
+    }
 };
+// Listar todos os usuários
+app.get('/admin/users', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                isAdmin: true,
+                createdAt: true,
+                isBanned: true,
+                banReason: true,
+                bannedUntil: true,
+                products: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        price: true,
+                        image: true,
+                        created_at: true,
+                    },
+                }, // Inclui os produtos do usuário
+            },
+        });
+        res.json(users);
+    } catch (error) {
+        console.error('Erro ao listar usuários:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+// Banir usuário (permanente ou temporário)
+app.post('/admin/users/:id/ban', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { duration, reason } = req.body; // duration em dias (null para permanente)
+
+        const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+        if (user.isAdmin) return res.status(403).json({ error: 'Não é possível banir outro administrador' });
+
+        const banData = {
+            isBanned: true,
+            banReason: reason || 'Violação das regras do marketplace',
+            bannedUntil: duration ? new Date(Date.now() + duration * 24 * 60 * 60 * 1000) : null,
+        };
+
+        const updatedUser = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: banData,
+        });
+
+        res.json({ message: 'Usuário banido com sucesso', user: updatedUser });
+    } catch (error) {
+        console.error('Erro ao banir usuário:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+// Remover produto com justificativa
+app.delete('/admin/products/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const product = await prisma.product.findUnique({
+            where: { id: parseInt(id) },
+            include: { user: true },
+        });
+        if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+
+        await fs.unlink(path.join(__dirname, 'uploads', product.image));
+        await prisma.product.delete({ where: { id: parseInt(id) } });
+
+        console.log(`Produto ${id} removido. Justificativa enviada para ${product.user.email}: ${reason}`);
+        res.json({ message: 'Produto removido com sucesso', reason });
+    } catch (error) {
+        console.error('Erro ao remover produto:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Middleware de autenticação
+const authenticateToken = async (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'Acesso negado' });
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+        if (!user) return res.status(403).json({ error: 'Usuário não encontrado' });
+        if (user.isBanned) {
+            const now = new Date();
+            if (!user.bannedUntil || user.bannedUntil > now) {
+                return res.status(403).json({ error: `Você está banido: ${user.banReason}` });
+            } else {
+                // Ban temporário expirou
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { isBanned: false, banReason: null, bannedUntil: null },
+                });
+            }
+        }
+        req.user = user;
+        next();
+    } catch (err) {
+        console.error('Erro ao verificar token:', err);
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+};
+// Remover banimento de usuário
+app.post('/admin/users/:id/unban', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+        if (!user.isBanned) return res.status(400).json({ error: 'Usuário não está banido' });
+
+        const updatedUser = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: {
+                isBanned: false,
+                banReason: null,
+                bannedUntil: null,
+            },
+        });
+
+        res.json({ message: 'Banimento removido com sucesso', user: updatedUser });
+    } catch (error) {
+        console.error('Erro ao remover banimento:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
 
 // Registro de usuário
 app.post('/register', async (req, res) => {
@@ -372,6 +511,7 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
+
 
 // Excluir produto (protegido, apenas dono)
 app.delete('/products/:id', authenticateToken, async (req, res) => {

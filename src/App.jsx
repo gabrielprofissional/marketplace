@@ -38,17 +38,13 @@ function App() {
               </li>
             </>
           ) : (
-            <>
-              <li>
-                <Link to="/register">Register</Link>
-              </li>
-              <li>
-                <Link to="/login">Login</Link>
-              </li>
-            </>
+            <></>
           )}
           <li>
-            <Link to="/portfolio">Portfolio</Link>
+            <Link to="/auth">Auth</Link>
+          </li>
+          <li>
+            <Link to="/admin">Admin</Link>
           </li>
         </ul>
       </nav>

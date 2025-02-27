@@ -4,11 +4,9 @@ import './Marketplace.css'
 import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import ReactSlider from 'react-slider' // Importando o react-slider
+import ReactSlider from 'react-slider'
 
 axios.defaults.withCredentials = true
-
-// Configuração do interceptor permanece igual (omitido por brevidade)
 
 export default function Marketplace() {
   const [products, setProducts] = useState([])
@@ -26,30 +24,29 @@ export default function Marketplace() {
   const [user, setUser] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
   const [favorites, setFavorites] = useState([])
-  const [priceRange, setPriceRange] = useState([0, 1000]) // Substitui minPrice e maxPrice
+  const [priceRange, setPriceRange] = useState([0, 1000])
   const [sort, setSort] = useState('created_at')
   const [showFavorites, setShowFavorites] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const loaderRef = useRef(null) // Referência para o ponto de observação
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false) // Novo estado
+  const loaderRef = useRef(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchUser()
     fetchFavorites()
-    fetchProducts(true) // Carrega produtos iniciais explicitamente
+    fetchProducts(true)
   }, [])
 
   useEffect(() => {
-    // Resetar produtos e offset ao mudar filtros
     setProducts([])
     setOffset(0)
     setHasMore(true)
-    fetchProducts(true) // true indica reset
-  }, [priceRange, sort]) // priceRange substitui minPrice e maxPrice
+    fetchProducts(true)
+  }, [priceRange, sort])
 
   useEffect(() => {
-    // Configurar IntersectionObserver
     const observer = new IntersectionObserver(
       (entries) => {
         if (entries[0].isIntersecting && hasMore && !isLoading) {
@@ -71,7 +68,7 @@ export default function Marketplace() {
       toast.error(
         'Erro ao verificar autenticação. Redirecionando para login...'
       )
-      navigate('/login')
+      navigate('/auth')
     }
   }
 
@@ -83,7 +80,7 @@ export default function Marketplace() {
         params: {
           offset: reset ? 0 : offset,
           limit,
-          minPrice: priceRange[0], // Usa valores do slider
+          minPrice: priceRange[0],
           maxPrice: priceRange[1],
           sort,
         },
@@ -95,11 +92,12 @@ export default function Marketplace() {
       setHasMore(
         newProducts.length === limit && offset + limit < response.data.total
       )
+      if (reset) setInitialLoadComplete(true) // Marca o carregamento inicial como concluído
     } catch (error) {
       console.error('Erro ao buscar produtos:', error)
       toast.error('Erro ao carregar produtos.')
       if (error.response?.status === 401 || error.response?.status === 403) {
-        navigate('/login')
+        navigate('/auth')
       }
     } finally {
       setIsLoading(false)
@@ -119,7 +117,7 @@ export default function Marketplace() {
   const handleLogout = () => {
     setUser(null)
     toast.info('Logout realizado com sucesso!')
-    navigate('/login')
+    navigate('/auth')
   }
 
   const handleSubmit = async (e) => {
@@ -247,7 +245,7 @@ export default function Marketplace() {
               </button>
             </div>
           ) : (
-            <button onClick={() => navigate('/login')}>Login</button>
+            <button onClick={() => navigate('/auth')}>Login</button>
           )}
         </div>
       </header>
@@ -257,7 +255,7 @@ export default function Marketplace() {
           {user && (
             <>
               <button
-                className={`add-button ${products.length === 0 ? 'pulse' : ''}`}
+                className={`add-button ${products.length === 0 && initialLoadComplete ? 'pulse' : ''}`}
                 onClick={() => {
                   setEditProductId(null)
                   setName('')
@@ -290,7 +288,7 @@ export default function Marketplace() {
                 value={priceRange}
                 onChange={(value) => setPriceRange(value)}
                 min={0}
-                max={1000} // Ajuste conforme os preços reais do seu marketplace
+                max={1000}
                 step={10}
                 pearling
                 minDistance={10}
@@ -303,7 +301,9 @@ export default function Marketplace() {
             </select>
           </div>
 
-          {filteredProducts.length > 0 ? (
+          {!initialLoadComplete ? (
+            <p className="loading-text">Carregando produtos...</p>
+          ) : filteredProducts.length > 0 ? (
             <div className="product-grid">
               {filteredProducts.map((product) => (
                 <div
@@ -341,16 +341,19 @@ export default function Marketplace() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : total === 0 ? (
             <p className="no-products">
               Nenhum produto adicionado ainda.{' '}
               {user
                 ? 'Clique no botão à esquerda para adicionar um.'
                 : 'Faça login para adicionar.'}
             </p>
+          ) : (
+            <p className="no-products">
+              Nenhum produto encontrado para esses filtros.
+            </p>
           )}
 
-          {/* Elemento de carregamento observado pelo IntersectionObserver */}
           {hasMore && (
             <div ref={loaderRef} className="loading">
               {isLoading && <p>Carregando mais produtos...</p>}
