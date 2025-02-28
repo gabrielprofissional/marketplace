@@ -468,6 +468,10 @@
   margin: 0 auto 15px; /* Centraliza horizontalmente */
   border-radius: 8px;
 }
+.site-logo {
+  max-height: 40px;
+  margin-right: 10px;
+}
 
 /* ... (demais estilos de modal, favoritos e perfil permanecem iguais, mas respeitam o width: 90% acima) ... */
 

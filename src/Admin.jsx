@@ -14,24 +14,44 @@ export default function Admin() {
   const [banDuration, setBanDuration] = useState('')
   const [removeProductReasons, setRemoveProductReasons] = useState({})
   const [searchQuery, setSearchQuery] = useState('')
-  const [sortOption, setSortOption] = useState('name') // Novo estado para ordenação
-  const [expandedUsers, setExpandedUsers] = useState({}) // Novo estado para expandir produtos
+  const [sortOption, setSortOption] = useState('name')
+  const [expandedUsers, setExpandedUsers] = useState({})
+  const [isSettingsExpanded, setIsSettingsExpanded] = useState(false)
+  const [settings, setSettings] = useState({
+    siteName: '',
+    logoUrl: null,
+    faviconUrl: null,
+  })
+  const [newSiteName, setNewSiteName] = useState('')
+  const [newLogo, setNewLogo] = useState(null)
+  const [newFavicon, setNewFavicon] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
     fetchUsers()
+    fetchSettings()
   }, [])
 
   const fetchUsers = async () => {
     try {
       const response = await axios.get('http://localhost:5000/admin/users')
-      console.log('Usuários recebidos:', response.data)
       setUsers(response.data)
       setIsLoading(false)
     } catch (error) {
       console.error('Erro ao buscar usuários:', error)
       toast.error('Erro ao carregar usuários ou acesso negado.')
       navigate('/marketplace')
+    }
+  }
+
+  const fetchSettings = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/admin/settings')
+      setSettings(response.data)
+      setNewSiteName(response.data.siteName)
+    } catch (error) {
+      console.error('Erro ao buscar configurações:', error)
+      toast.error('Erro ao carregar configurações.')
     }
   }
 
@@ -87,6 +107,31 @@ export default function Admin() {
     }
   }
 
+  const handleUpdateSettings = async (e) => {
+    e.preventDefault()
+    const formData = new FormData()
+    if (newSiteName) formData.append('siteName', newSiteName)
+    if (newLogo) formData.append('logo', newLogo)
+    if (newFavicon) formData.append('favicon', newFavicon)
+
+    try {
+      const response = await axios.put(
+        'http://localhost:5000/admin/settings',
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      )
+      setSettings(response.data.settings)
+      setNewLogo(null)
+      setNewFavicon(null)
+      toast.success('Configurações atualizadas com sucesso!')
+    } catch (error) {
+      console.error('Erro ao atualizar configurações:', error)
+      toast.error('Erro ao atualizar configurações.')
+    }
+  }
+
   const toggleProducts = (userId) => {
     setExpandedUsers((prev) => ({
       ...prev,
@@ -94,7 +139,10 @@ export default function Admin() {
     }))
   }
 
-  // Filtrar e ordenar usuários
+  const toggleSettings = () => {
+    setIsSettingsExpanded((prev) => !prev)
+  }
+
   const filteredUsers = users
     .filter(
       (user) =>
@@ -139,105 +187,179 @@ export default function Admin() {
         </button>
       </header>
       <main className="admin-content">
-        <h2>Gerenciar Usuários</h2>
-        <div className="user-list">
-          {filteredUsers.length > 0 ? (
-            filteredUsers.map((user) => (
-              <div key={user.id} className="user-card">
-                <div className="user-header">
-                  <h3>{user.name}</h3>
-                  <button
-                    className="toggle-products-btn"
-                    onClick={() => toggleProducts(user.id)}
-                  >
-                    {expandedUsers[user.id]
-                      ? 'Esconder Produtos'
-                      : 'Mostrar Produtos'}
-                  </button>
-                </div>
-                <p>Email: {user.email}</p>
-                <p>Admin: {user.isAdmin ? 'Sim' : 'Não'}</p>
-                <p>
-                  Status:{' '}
-                  {user.isBanned
-                    ? `Banido até ${
-                        user.bannedUntil
-                          ? new Date(user.bannedUntil).toLocaleDateString()
-                          : 'Permanentemente'
-                      } - Motivo: ${user.banReason || 'N/A'}`
-                    : 'Ativo'}
-                </p>
-                {!user.isAdmin && (
-                  <div className="ban-section">
-                    {!user.isBanned ? (
-                      <>
-                        <input
-                          type="text"
-                          placeholder="Justificativa do banimento"
-                          value={banReason}
-                          onChange={(e) => setBanReason(e.target.value)}
-                        />
-                        <input
-                          type="number"
-                          placeholder="Duração (dias, deixe em branco para permanente)"
-                          value={banDuration}
-                          onChange={(e) => setBanDuration(e.target.value)}
-                        />
-                        <button onClick={() => handleBanUser(user.id)}>
-                          Banir
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        className="unban-btn"
-                        onClick={() => handleUnbanUser(user.id)}
-                      >
-                        Remover Banimento
-                      </button>
-                    )}
-                  </div>
-                )}
-                {expandedUsers[user.id] && (
-                  <div className="products-section">
-                    <h4>Produtos</h4>
-                    {user.products.length > 0 ? (
-                      <ul>
-                        {user.products.map((product) => (
-                          <li key={product.id} className="product-item">
-                            <span>
-                              {product.name} - R$ {product.price.toFixed(2)}
-                            </span>
-                            <input
-                              type="text"
-                              placeholder="Justificativa para remoção"
-                              value={removeProductReasons[product.id] || ''}
-                              onChange={(e) =>
-                                setRemoveProductReasons((prev) => ({
-                                  ...prev,
-                                  [product.id]: e.target.value,
-                                }))
-                              }
-                            />
-                            <button
-                              className="remove-product-btn"
-                              onClick={() => handleRemoveProduct(product.id)}
-                            >
-                              Remover
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p>Nenhum produto cadastrado.</p>
-                    )}
-                  </div>
-                )}
+        {/* Seção de Configurações Expansível */}
+        <section className="settings-section">
+          <div className="settings-header">
+            <h2>Personalizar Site</h2>
+            <button className="toggle-settings-btn" onClick={toggleSettings}>
+              {isSettingsExpanded ? 'Minimizar' : 'Expandir'}
+            </button>
+          </div>
+          {isSettingsExpanded && (
+            <form onSubmit={handleUpdateSettings} className="settings-form">
+              <div className="form-group">
+                <label htmlFor="siteName">Nome do Site:</label>
+                <input
+                  type="text"
+                  id="siteName"
+                  value={newSiteName}
+                  onChange={(e) => setNewSiteName(e.target.value)}
+                  placeholder="Digite o nome do site"
+                />
               </div>
-            ))
-          ) : (
-            <p className="no-results">Nenhum usuário encontrado.</p>
+              <div className="form-group">
+                <label>Logo Atual:</label>
+                {settings.logoUrl ? (
+                  <img
+                    src={`http://localhost:5000/uploads/${settings.logoUrl}`}
+                    alt="Logo atual"
+                    className="current-logo"
+                  />
+                ) : (
+                  <p>Sem logo definida</p>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="logo-input"
+                  onChange={(e) => setNewLogo(e.target.files[0])}
+                  hidden
+                />
+                <label htmlFor="logo-input" className="upload-btn">
+                  Escolher Nova Logo
+                </label>
+              </div>
+              <div className="form-group">
+                <label>Favicon Atual:</label>
+                {settings.faviconUrl ? (
+                  <img
+                    src={`http://localhost:5000/uploads/${settings.faviconUrl}`}
+                    alt="Favicon atual"
+                    className="current-favicon"
+                  />
+                ) : (
+                  <p>Sem favicon definido</p>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="favicon-input"
+                  onChange={(e) => setNewFavicon(e.target.files[0])}
+                  hidden
+                />
+                <label htmlFor="favicon-input" className="upload-btn">
+                  Escolher Novo Favicon
+                </label>
+              </div>
+              <button type="submit" className="save-btn">
+                Salvar Configurações
+              </button>
+            </form>
           )}
-        </div>
+        </section>
+
+        {/* Seção de Usuários */}
+        <section className="users-section">
+          <h2>Gerenciar Usuários</h2>
+          <div className="user-list">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <div key={user.id} className="user-card">
+                  <div className="user-header">
+                    <h3>{user.name}</h3>
+                    <button
+                      className="toggle-products-btn"
+                      onClick={() => toggleProducts(user.id)}
+                    >
+                      {expandedUsers[user.id]
+                        ? 'Esconder Produtos'
+                        : 'Mostrar Produtos'}
+                    </button>
+                  </div>
+                  <p>Email: {user.email}</p>
+                  <p>Admin: {user.isAdmin ? 'Sim' : 'Não'}</p>
+                  <p>
+                    Status:{' '}
+                    {user.isBanned
+                      ? `Banido até ${
+                          user.bannedUntil
+                            ? new Date(user.bannedUntil).toLocaleDateString()
+                            : 'Permanentemente'
+                        } - Motivo: ${user.banReason || 'N/A'}`
+                      : 'Ativo'}
+                  </p>
+                  {!user.isAdmin && (
+                    <div className="ban-section">
+                      {!user.isBanned ? (
+                        <>
+                          <input
+                            type="text"
+                            placeholder="Justificativa do banimento"
+                            value={banReason}
+                            onChange={(e) => setBanReason(e.target.value)}
+                          />
+                          <input
+                            type="number"
+                            placeholder="Duração (dias, deixe em branco para permanente)"
+                            value={banDuration}
+                            onChange={(e) => setBanDuration(e.target.value)}
+                          />
+                          <button onClick={() => handleBanUser(user.id)}>
+                            Banir
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          className="unban-btn"
+                          onClick={() => handleUnbanUser(user.id)}
+                        >
+                          Remover Banimento
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {expandedUsers[user.id] && (
+                    <div className="products-section">
+                      <h4>Produtos</h4>
+                      {user.products.length > 0 ? (
+                        <ul>
+                          {user.products.map((product) => (
+                            <li key={product.id} className="product-item">
+                              <span>
+                                {product.name} - R$ {product.price.toFixed(2)}
+                              </span>
+                              <input
+                                type="text"
+                                placeholder="Justificativa para remoção"
+                                value={removeProductReasons[product.id] || ''}
+                                onChange={(e) =>
+                                  setRemoveProductReasons((prev) => ({
+                                    ...prev,
+                                    [product.id]: e.target.value,
+                                  }))
+                                }
+                              />
+                              <button
+                                className="remove-product-btn"
+                                onClick={() => handleRemoveProduct(product.id)}
+                              >
+                                Remover
+                              </button>
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p>Nenhum produto cadastrado.</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <p className="no-results">Nenhum usuário encontrado.</p>
+            )}
+          </div>
+        </section>
       </main>
     </div>
   )

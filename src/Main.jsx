@@ -2,28 +2,30 @@ import React from 'react'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom'
-import './index.css'
-import App from './App.jsx'
-
-import Auth from './Auth.jsx' // Novo componente combinado
-import Portfolio from './Portfolio.jsx' // 🔹 Importamos a nova página
+import { SettingsProvider } from './SettingsContext' // Adiciona o provider
+import Auth from './Auth.jsx'
+import Portfolio from './Portfolio.jsx'
+import SellerProfile from './SellerProfile'
+import Admin from './Admin.jsx'
+import Profile from './Profile.jsx'
 import Marketplace from './Marketplace.jsx'
-import SellerProfile from './SellerProfile' // Novo componente
-import Admin from './Admin.jsx' // Importe a nova página
+import App from './App.jsx' // Inclui o App como uma página
+import './index.css' // ou main.css, dependendo do seu projeto
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <Router>
-      <Routes>
-        <Route path="/" element={<App />} />
-        <Route path="/auth" element={<Auth />} />{' '}
-        {/* Substitui /login e /register */}
-        <Route path="/portfolio" element={<Portfolio />} />{' '}
-        <Route path="/marketplace" element={<Marketplace />} />{' '}
-        <Route path="/users/:id" element={<SellerProfile />} />
-        <Route path="/admin" element={<Admin />} /> {/* Nova rota */}
-        {/* 🔹 Adicionamos a nova rota */}
-      </Routes>
-    </Router>
+    <SettingsProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<App />} /> {/* App como página inicial */}
+          <Route path="/auth" element={<Auth />} />
+          <Route path="/portfolio" element={<Portfolio />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/marketplace" element={<Marketplace />} />
+          <Route path="/users/:id" element={<SellerProfile />} />
+          <Route path="/admin" element={<Admin />} />
+        </Routes>
+      </Router>
+    </SettingsProvider>
   </StrictMode>
 )

@@ -1,25 +1,29 @@
 import React, { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { jwtDecode } from 'jwt-decode' // Mudança aqui: importação nomeada
+import { Link, useNavigate } from 'react-router-dom'
+import axios from 'axios'
+
+axios.defaults.withCredentials = true
 
 function App() {
   const [user, setUser] = useState(null)
+  const navigate = useNavigate()
 
   useEffect(() => {
-    const token = localStorage.getItem('token')
-    if (token) {
+    const fetchUser = async () => {
       try {
-        const decoded = jwtDecode(token) // Uso da função nomeada
-        setUser({ email: decoded.email })
+        const response = await axios.get('http://localhost:5000/me')
+        setUser(response.data)
       } catch (error) {
-        localStorage.removeItem('token')
+        console.error('Erro ao buscar usuário:', error)
+        setUser(null)
       }
     }
+    fetchUser()
   }, [])
 
-  const handleLogout = () => {
-    localStorage.removeItem('token')
+  const handleLogout = async () => {
     setUser(null)
+    navigate('/auth')
   }
 
   return (
@@ -32,17 +36,16 @@ function App() {
           </li>
           {user ? (
             <>
-              <li>Bem-vindo, {user.email}</li>
+              <li>Bem-vindo, {user.name}</li>
               <li>
                 <button onClick={handleLogout}>Logout</button>
               </li>
             </>
           ) : (
-            <></>
+            <li>
+              <Link to="/auth">Login</Link>
+            </li>
           )}
-          <li>
-            <Link to="/auth">Auth</Link>
-          </li>
           <li>
             <Link to="/admin">Admin</Link>
           </li>

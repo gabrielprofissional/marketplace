@@ -1,3 +1,4 @@
+import { promises as fs } from 'fs'; // Única importação de fs usando promises
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import cors from 'cors';
@@ -5,7 +6,6 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import multer from 'multer';
 import sharp from 'sharp';
-import { promises as fs } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Joi from 'joi';
@@ -69,6 +69,35 @@ const productSchema = Joi.object({
     description: Joi.string().min(3).max(500).required(),
     price: Joi.number().positive().required(),
 });
+
+// Middleware para verificar autenticação
+const authenticateToken = async (req, res, next) => {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'Acesso negado' });
+
+    try {
+        const decoded = jwt.verify(token, SECRET_KEY);
+        const user = await prisma.user.findUnique({ where: { id: decoded.id } });
+        if (!user) return res.status(403).json({ error: 'Usuário não encontrado' });
+        if (user.isBanned) {
+            const now = new Date();
+            if (!user.bannedUntil || user.bannedUntil > now) {
+                return res.status(403).json({ error: `Você está banido: ${user.banReason}` });
+            } else {
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { isBanned: false, banReason: null, bannedUntil: null },
+                });
+            }
+        }
+        req.user = user;
+        next();
+    } catch (err) {
+        console.error('Erro ao verificar token:', err);
+        return res.status(403).json({ error: 'Token inválido' });
+    }
+};
+
 // Middleware para verificar se é admin
 const authenticateAdmin = async (req, res, next) => {
     const token = req.cookies.token;
@@ -92,142 +121,9 @@ const authenticateAdmin = async (req, res, next) => {
         return res.status(403).json({ error: 'Token inválido ou acesso negado' });
     }
 };
-// Listar todos os usuários
-app.get('/admin/users', authenticateAdmin, async (req, res) => {
-    try {
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                isAdmin: true,
-                createdAt: true,
-                isBanned: true,
-                banReason: true,
-                bannedUntil: true,
-                products: {
-                    select: {
-                        id: true,
-                        name: true,
-                        description: true,
-                        price: true,
-                        image: true,
-                        created_at: true,
-                    },
-                }, // Inclui os produtos do usuário
-            },
-        });
-        res.json(users);
-    } catch (error) {
-        console.error('Erro ao listar usuários:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-// Banir usuário (permanente ou temporário)
-app.post('/admin/users/:id/ban', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { duration, reason } = req.body; // duration em dias (null para permanente)
-
-        const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
-        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-        if (user.isAdmin) return res.status(403).json({ error: 'Não é possível banir outro administrador' });
-
-        const banData = {
-            isBanned: true,
-            banReason: reason || 'Violação das regras do marketplace',
-            bannedUntil: duration ? new Date(Date.now() + duration * 24 * 60 * 60 * 1000) : null,
-        };
-
-        const updatedUser = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: banData,
-        });
-
-        res.json({ message: 'Usuário banido com sucesso', user: updatedUser });
-    } catch (error) {
-        console.error('Erro ao banir usuário:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-// Remover produto com justificativa
-app.delete('/admin/products/:id', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-        const { reason } = req.body;
-
-        const product = await prisma.product.findUnique({
-            where: { id: parseInt(id) },
-            include: { user: true },
-        });
-        if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
-
-        await fs.unlink(path.join(__dirname, 'uploads', product.image));
-        await prisma.product.delete({ where: { id: parseInt(id) } });
-
-        console.log(`Produto ${id} removido. Justificativa enviada para ${product.user.email}: ${reason}`);
-        res.json({ message: 'Produto removido com sucesso', reason });
-    } catch (error) {
-        console.error('Erro ao remover produto:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
-
-// Middleware de autenticação
-const authenticateToken = async (req, res, next) => {
-    const token = req.cookies.token;
-    if (!token) return res.status(401).json({ error: 'Acesso negado' });
-
-    try {
-        const decoded = jwt.verify(token, SECRET_KEY);
-        const user = await prisma.user.findUnique({ where: { id: decoded.id } });
-        if (!user) return res.status(403).json({ error: 'Usuário não encontrado' });
-        if (user.isBanned) {
-            const now = new Date();
-            if (!user.bannedUntil || user.bannedUntil > now) {
-                return res.status(403).json({ error: `Você está banido: ${user.banReason}` });
-            } else {
-                // Ban temporário expirou
-                await prisma.user.update({
-                    where: { id: user.id },
-                    data: { isBanned: false, banReason: null, bannedUntil: null },
-                });
-            }
-        }
-        req.user = user;
-        next();
-    } catch (err) {
-        console.error('Erro ao verificar token:', err);
-        return res.status(403).json({ error: 'Token inválido' });
-    }
-};
-// Remover banimento de usuário
-app.post('/admin/users/:id/unban', authenticateAdmin, async (req, res) => {
-    try {
-        const { id } = req.params;
-
-        const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
-        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
-        if (!user.isBanned) return res.status(400).json({ error: 'Usuário não está banido' });
-
-        const updatedUser = await prisma.user.update({
-            where: { id: parseInt(id) },
-            data: {
-                isBanned: false,
-                banReason: null,
-                bannedUntil: null,
-            },
-        });
-
-        res.json({ message: 'Banimento removido com sucesso', user: updatedUser });
-    } catch (error) {
-        console.error('Erro ao remover banimento:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
-});
 
 // Registro de usuário
-app.post('/register', async (req, res) => {
+app.post('/register', upload.single('profilePicture'), async (req, res) => {
     try {
         const { name, email, password } = req.body;
         console.log('Dados recebidos para registro:', { name, email, password });
@@ -241,8 +137,30 @@ app.post('/register', async (req, res) => {
         }
 
         const hashedPassword = await bcrypt.hash(password, 12);
+        let profilePicture = null;
+
+        if (req.file) {
+            const imageFilename = req.file.filename;
+            const uniqueFilenameBase = imageFilename.replace(path.extname(imageFilename), '');
+            const resizedFilename = `${uniqueFilenameBase}_profile.jpg`;
+            const resizedFilePath = path.join(__dirname, 'uploads', resizedFilename);
+
+            await sharp(req.file.path)
+                .toFormat('jpeg')
+                .resize(200, 200, { fit: 'cover' })
+                .toFile(resizedFilePath);
+
+            await fs.unlink(req.file.path);
+            profilePicture = resizedFilename;
+        }
+
         const newUser = await prisma.user.create({
-            data: { name, email, password: hashedPassword },
+            data: {
+                name,
+                email,
+                password: hashedPassword,
+                profilePicture
+            },
         });
 
         res.status(201).json({ message: 'Usuário registrado com sucesso', user: newUser });
@@ -291,12 +209,12 @@ app.post('/login', async (req, res) => {
     }
 });
 
-// Nova rota para obter dados do usuário autenticado
+// Obter dados do usuário autenticado
 app.get('/me', authenticateToken, async (req, res) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id: req.user.id },
-            select: { id: true, name: true, email: true },
+            select: { id: true, name: true, email: true, profilePicture: true },
         });
         if (!user) {
             return res.status(404).json({ error: 'Usuário não encontrado' });
@@ -304,6 +222,55 @@ app.get('/me', authenticateToken, async (req, res) => {
         res.json(user);
     } catch (error) {
         console.error('Erro ao buscar usuário:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Atualizar perfil (nome, email e/ou foto de perfil)
+app.put('/me', authenticateToken, upload.single('profilePicture'), async (req, res) => {
+    try {
+        const { name, email } = req.body;
+        let updatedData = {};
+
+        if (name) updatedData.name = name;
+        if (email) {
+            const existingUser = await prisma.user.findUnique({ where: { email } });
+            if (existingUser && existingUser.id !== req.user.id) {
+                return res.status(400).json({ error: 'E-mail já está em uso' });
+            }
+            updatedData.email = email;
+        }
+
+        if (req.file) {
+            const imageFilename = req.file.filename;
+            const uniqueFilenameBase = imageFilename.replace(path.extname(imageFilename), '');
+            const resizedFilename = `${uniqueFilenameBase}_profile.jpg`;
+            const resizedFilePath = path.join(__dirname, 'uploads', resizedFilename);
+
+            await sharp(req.file.path)
+                .toFormat('jpeg')
+                .resize(200, 200, { fit: 'cover' })
+                .toFile(resizedFilePath);
+
+            await fs.unlink(req.file.path);
+
+            const currentUser = await prisma.user.findUnique({ where: { id: req.user.id } });
+            if (currentUser.profilePicture) {
+                await fs.unlink(path.join(__dirname, 'uploads', currentUser.profilePicture));
+            }
+
+            updatedData.profilePicture = resizedFilename;
+        }
+
+        const updatedUser = await prisma.user.update({
+            where: { id: req.user.id },
+            data: updatedData,
+            select: { id: true, name: true, email: true, profilePicture: true },
+        });
+
+        res.json({ message: 'Perfil atualizado com sucesso', user: updatedUser });
+    } catch (error) {
+        console.error('Erro ao atualizar perfil:', error);
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
@@ -329,8 +296,8 @@ app.post('/refresh-token', (req, res) => {
 // Listar produtos com filtros avançados
 app.get('/products', async (req, res) => {
     try {
-        const offset = parseInt(req.query.offset) || 0; // Ponto de início
-        const limit = parseInt(req.query.limit) || 10; // Quantidade por carga
+        const offset = parseInt(req.query.offset) || 0;
+        const limit = parseInt(req.query.limit) || 10;
         const minPrice = req.query.minPrice ? parseFloat(req.query.minPrice) : null;
         const maxPrice = req.query.maxPrice ? parseFloat(req.query.maxPrice) : null;
         const sort = req.query.sort || 'created_at';
@@ -366,9 +333,7 @@ app.get('/products/:id', async (req, res) => {
         console.log('Buscando detalhes do produto:', id);
         const product = await prisma.product.findUnique({
             where: { id: parseInt(id) },
-            include: {
-                user: { select: { id: true, name: true, email: true } }, // Dados do vendedor
-            },
+            include: { user: { select: { id: true, name: true, email: true } } },
         });
         if (!product) {
             return res.status(404).json({ error: 'Produto não encontrado' });
@@ -435,13 +400,7 @@ app.post('/products', authenticateToken, upload.single('image'), async (req, res
             .resize(500, 500)
             .toFile(resizedFilePath);
 
-        console.log('Imagem processada, removendo original:', req.file.path);
-        await new Promise(resolve => setTimeout(resolve, 100));
-        try {
-            await fs.unlink(req.file.path);
-        } catch (unlinkError) {
-            console.warn('Erro ao deletar arquivo temporário (continuando):', unlinkError);
-        }
+        await fs.unlink(req.file.path); // Removido o setTimeout
 
         const parsedPrice = parseFloat(price);
         if (isNaN(parsedPrice)) {
@@ -490,12 +449,7 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
                 .resize(500, 500)
                 .toFile(resizedFilePath);
 
-            await new Promise(resolve => setTimeout(resolve, 100));
-            try {
-                await fs.unlink(req.file.path);
-            } catch (unlinkError) {
-                console.warn('Erro ao deletar arquivo temporário (continuando):', unlinkError);
-            }
+            await fs.unlink(req.file.path); // Removido o setTimeout
             await fs.unlink(path.join(__dirname, 'uploads', product.image));
             updatedData.image = resizedFilename;
         }
@@ -511,7 +465,6 @@ app.put('/products/:id', authenticateToken, upload.single('image'), async (req, 
         res.status(500).json({ error: 'Erro interno do servidor' });
     }
 });
-
 
 // Excluir produto (protegido, apenas dono)
 app.delete('/products/:id', authenticateToken, async (req, res) => {
@@ -534,6 +487,190 @@ app.delete('/products/:id', authenticateToken, async (req, res) => {
     }
 });
 
+// Listar todos os usuários (admin)
+app.get('/admin/users', authenticateAdmin, async (req, res) => {
+    try {
+        const users = await prisma.user.findMany({
+            select: {
+                id: true,
+                name: true,
+                email: true,
+                isAdmin: true,
+                createdAt: true,
+                isBanned: true,
+                banReason: true,
+                bannedUntil: true,
+                products: {
+                    select: {
+                        id: true,
+                        name: true,
+                        description: true,
+                        price: true,
+                        image: true,
+                        created_at: true,
+                    },
+                },
+            },
+        });
+        res.json(users);
+    } catch (error) {
+        console.error('Erro ao listar usuários:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Banir usuário (permanente ou temporário)
+app.post('/admin/users/:id/ban', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { duration, reason } = req.body;
+
+        const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+        if (user.isAdmin) return res.status(403).json({ error: 'Não é possível banir outro administrador' });
+
+        const banData = {
+            isBanned: true,
+            banReason: reason || 'Violação das regras do marketplace',
+            bannedUntil: duration ? new Date(Date.now() + duration * 24 * 60 * 60 * 1000) : null,
+        };
+
+        const updatedUser = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: banData,
+        });
+
+        res.json({ message: 'Usuário banido com sucesso', user: updatedUser });
+    } catch (error) {
+        console.error('Erro ao banir usuário:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Remover banimento de usuário
+app.post('/admin/users/:id/unban', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const user = await prisma.user.findUnique({ where: { id: parseInt(id) } });
+        if (!user) return res.status(404).json({ error: 'Usuário não encontrado' });
+        if (!user.isBanned) return res.status(400).json({ error: 'Usuário não está banido' });
+
+        const updatedUser = await prisma.user.update({
+            where: { id: parseInt(id) },
+            data: { isBanned: false, banReason: null, bannedUntil: null },
+        });
+
+        res.json({ message: 'Banimento removido com sucesso', user: updatedUser });
+    } catch (error) {
+        console.error('Erro ao remover banimento:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Remover produto com justificativa (admin)
+app.delete('/admin/products/:id', authenticateAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { reason } = req.body;
+
+        const product = await prisma.product.findUnique({
+            where: { id: parseInt(id) },
+            include: { user: true },
+        });
+        if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
+
+        await fs.unlink(path.join(__dirname, 'uploads', product.image));
+        await prisma.product.delete({ where: { id: parseInt(id) } });
+
+        console.log(`Produto ${id} removido. Justificativa enviada para ${product.user.email}: ${reason}`);
+        res.json({ message: 'Produto removido com sucesso', reason });
+    } catch (error) {
+        console.error('Erro ao remover produto:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Obter configurações atuais (admin)
+app.get('/admin/settings', authenticateAdmin, async (req, res) => {
+    try {
+        let settings = await prisma.settings.findFirst();
+        if (!settings) {
+            settings = await prisma.settings.create({
+                data: {
+                    siteName: 'Marketplace',
+                    logoUrl: null,
+                    faviconUrl: null,
+                },
+            });
+        }
+        res.json(settings);
+    } catch (error) {
+        console.error('Erro ao buscar configurações:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
+
+// Atualizar configurações (nome do site, logo e favicon)
+// Atualizar configurações (nome do site, logo e favicon)
+// Atualizar configurações (nome do site, logo e favicon)
+app.put('/admin/settings', authenticateAdmin, upload.fields([
+    { name: 'logo', maxCount: 1 },
+    { name: 'favicon', maxCount: 1 }
+]), async (req, res) => {
+    try {
+        const { siteName } = req.body;
+        const files = req.files;
+        let settings = await prisma.settings.findFirst();
+
+        if (!settings) {
+            settings = await prisma.settings.create({
+                data: { siteName: 'Marketplace' },
+            });
+        }
+
+        const updatedData = {};
+        if (siteName) updatedData.siteName = siteName;
+
+        // Processar logo (preservar transparência)
+        if (files.logo) {
+            const logoFile = files.logo[0];
+            const logoFilename = `${logoFile.filename}_logo.png`; // Usamos PNG para suportar transparência
+            const logoPath = path.join(__dirname, 'uploads', logoFilename);
+            await sharp(logoFile.path)
+                .toFormat('png') // Alterado para PNG para suportar transparência
+                .resize(200, 200, { fit: 'contain' }) // Removido background, usa transparência por padrão
+                .toFile(logoPath);
+            await fs.unlink(logoFile.path);
+            if (settings.logoUrl) await fs.unlink(path.join(__dirname, 'uploads', settings.logoUrl));
+            updatedData.logoUrl = logoFilename;
+        }
+
+        // Processar favicon (preservar transparência)
+        if (files.favicon) {
+            const faviconFile = files.favicon[0];
+            const faviconFilename = `${faviconFile.filename}_favicon.png`; // Mantém PNG para transparência
+            const faviconPath = path.join(__dirname, 'uploads', faviconFilename);
+            await sharp(faviconFile.path)
+                .toFormat('png') // Mantém PNG para suportar transparência
+                .resize(32, 32, { fit: 'contain' }) // Preserva transparência, sem fundo sólido
+                .toFile(faviconPath);
+            await fs.unlink(faviconFile.path);
+            if (settings.faviconUrl) await fs.unlink(path.join(__dirname, 'uploads', settings.faviconUrl));
+            updatedData.faviconUrl = faviconFilename;
+        }
+
+        const updatedSettings = await prisma.settings.update({
+            where: { id: settings.id },
+            data: updatedData,
+        });
+
+        res.json({ message: 'Configurações atualizadas com sucesso', settings: updatedSettings });
+    } catch (error) {
+        console.error('Erro ao atualizar configurações:', error);
+        res.status(500).json({ error: 'Erro interno do servidor' });
+    }
+});
 // Adicionar favorito
 app.post('/favorites', authenticateToken, async (req, res) => {
     try {
@@ -613,7 +750,7 @@ app.get('/favorites', authenticateToken, async (req, res) => {
     }
 });
 
-// No arquivo do servidor (index.js ou similar)
+// Listar categorias
 app.get('/categories', async (req, res) => {
     try {
         const categories = await prisma.category.findMany();
@@ -624,6 +761,7 @@ app.get('/categories', async (req, res) => {
     }
 });
 
+// Iniciar o servidor
 const PORT = 5000;
 app.listen(PORT, () => {
     console.log(`🚀 Servidor rodando na porta ${PORT}`);

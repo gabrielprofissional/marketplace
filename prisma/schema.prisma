@@ -8,18 +8,19 @@ generator client {
 }
 
 model User {
-  id          Int       @id @default(autoincrement())
-  name        String
-  email       String    @unique
-  password    String
-  isAdmin     Boolean   @default(false)
-  isBanned    Boolean   @default(false)
-  banReason   String?
-  bannedUntil DateTime?
-  products    Product[]
-  favorites   Favorite[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id             Int       @id @default(autoincrement())
+  name           String
+  email          String    @unique
+  password       String
+  profilePicture String?   // Novo campo para foto de perfil
+  isAdmin        Boolean   @default(false)
+  isBanned       Boolean   @default(false)
+  banReason      String?
+  bannedUntil    DateTime?
+  products       Product[]
+  favorites      Favorite[]
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 model Product {
@@ -41,4 +42,11 @@ model Favorite {
   user      User     @relation(fields: [userId], references: [id])
   product   Product  @relation(fields: [productId], references: [id])
   @@unique([userId, productId]) // Evita duplicatas
+}
+model Settings {
+  id          Int      @id @default(autoincrement())
+  siteName    String   @default("Marketplace")
+  logoUrl     String?  // Caminho da logo no servidor
+  faviconUrl  String?  // Caminho do favicon no servidor
+  updatedAt   DateTime @updatedAt
 }

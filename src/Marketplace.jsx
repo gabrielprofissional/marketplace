@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, useContext } from 'react'
 import axios from 'axios'
 import './Marketplace.css'
 import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import ReactSlider from 'react-slider'
+import { SettingsContext } from './SettingsContext'
 
 axios.defaults.withCredentials = true
 
 export default function Marketplace() {
+  const { settings, isLoading } = useContext(SettingsContext) // Acessa settings e isLoading
   const [products, setProducts] = useState([])
   const [total, setTotal] = useState(0)
   const [offset, setOffset] = useState(0)
   const [limit] = useState(10)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false) // Renomeado para evitar conflito
   const [hasMore, setHasMore] = useState(true)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -29,9 +31,12 @@ export default function Marketplace() {
   const [showFavorites, setShowFavorites] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false) // Novo estado
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const loaderRef = useRef(null)
   const navigate = useNavigate()
+
+  const context = useContext(SettingsContext)
+  console.log('SettingsContext value:', context)
 
   useEffect(() => {
     fetchUser()
@@ -49,7 +54,7 @@ export default function Marketplace() {
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading) {
+        if (entries[0].isIntersecting && hasMore && !isLoadingProducts) {
           fetchProducts()
         }
       },
@@ -57,7 +62,7 @@ export default function Marketplace() {
     )
     if (loaderRef.current) observer.observe(loaderRef.current)
     return () => observer.disconnect()
-  }, [hasMore, isLoading])
+  }, [hasMore, isLoadingProducts])
 
   const fetchUser = async () => {
     try {
@@ -73,8 +78,8 @@ export default function Marketplace() {
   }
 
   const fetchProducts = async (reset = false) => {
-    if (isLoading || (!hasMore && !reset)) return
-    setIsLoading(true)
+    if (isLoadingProducts || (!hasMore && !reset)) return
+    setIsLoadingProducts(true)
     try {
       const response = await axios.get(`http://localhost:5000/products`, {
         params: {
@@ -92,7 +97,7 @@ export default function Marketplace() {
       setHasMore(
         newProducts.length === limit && offset + limit < response.data.total
       )
-      if (reset) setInitialLoadComplete(true) // Marca o carregamento inicial como concluído
+      if (reset) setInitialLoadComplete(true)
     } catch (error) {
       console.error('Erro ao buscar produtos:', error)
       toast.error('Erro ao carregar produtos.')
@@ -100,7 +105,7 @@ export default function Marketplace() {
         navigate('/auth')
       }
     } finally {
-      setIsLoading(false)
+      setIsLoadingProducts(false)
     }
   }
 
@@ -219,6 +224,10 @@ export default function Marketplace() {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  if (isLoading) {
+    return <div className="loading-text">Carregando configurações...</div>
+  }
+
   return (
     <div className="marketplace">
       <ToastContainer
@@ -228,7 +237,15 @@ export default function Marketplace() {
       />
       <header className="marketplace-header">
         <div className="header-content">
-          <h1>Marketplace</h1>
+          {settings.logoUrl && (
+            <img
+              src={`http://localhost:5000/uploads/${settings.logoUrl}`}
+              alt="Logo"
+              className="site-logo"
+            />
+          )}
+          <h1>{settings.siteName || 'Marketplace'}</h1>{' '}
+          {/* Fallback para "Marketplace" */}
           <div className="search-bar">
             <input
               type="text"
@@ -270,7 +287,7 @@ export default function Marketplace() {
               <button onClick={() => setShowFavorites(true)}>
                 Meus Favoritos
               </button>
-              <button onClick={() => setShowProfile(true)}>Meu Perfil</button>
+              <button onClick={() => navigate('/profile')}>Meu Perfil</button>
             </>
           )}
         </aside>
@@ -356,7 +373,7 @@ export default function Marketplace() {
 
           {hasMore && (
             <div ref={loaderRef} className="loading">
-              {isLoading && <p>Carregando mais produtos...</p>}
+              {isLoadingProducts && <p>Carregando mais produtos...</p>}
             </div>
           )}
 
