@@ -122,10 +122,11 @@ export default function Admin() {
           headers: { 'Content-Type': 'multipart/form-data' },
         }
       )
-      setSettings(response.data.settings)
+      setSettings(response.data.settings) // Atualiza o estado local
       setNewLogo(null)
       setNewFavicon(null)
       toast.success('Configurações atualizadas com sucesso!')
+      fetchSettings() // Recarrega as configurações para garantir consistência
     } catch (error) {
       console.error('Erro ao atualizar configurações:', error)
       toast.error('Erro ao atualizar configurações.')

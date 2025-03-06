@@ -477,9 +477,30 @@ app.delete('/products/:id', authenticateToken, async (req, res) => {
             return res.status(403).json({ error: 'Você não tem permissão para excluir este produto' });
         }
 
-        await fs.unlink(path.join(__dirname, 'uploads', product.image));
-        await prisma.product.delete({ where: { id: parseInt(id) } });
+        const filePath = path.join(__dirname, 'uploads', product.image);
+        console.log('Tentando excluir arquivo:', filePath);
 
+        // Verifica e exclui o arquivo, se existir
+        try {
+            await fs.access(filePath);
+            await fs.unlink(filePath);
+            console.log('Arquivo excluído com sucesso:', filePath);
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                console.warn('Arquivo não encontrado, prosseguindo:', filePath);
+            } else {
+                throw err;
+            }
+        }
+
+        // Exclui todos os favoritos associados ao produto
+        await prisma.favorite.deleteMany({
+            where: { productId: parseInt(id) },
+        });
+        console.log(`Favoritos associados ao produto ${id} excluídos.`);
+
+        // Exclui o produto
+        await prisma.product.delete({ where: { id: parseInt(id) } });
         res.json({ message: 'Produto excluído com sucesso' });
     } catch (error) {
         console.error('Erro ao excluir produto:', error);
@@ -569,6 +590,7 @@ app.post('/admin/users/:id/unban', authenticateAdmin, async (req, res) => {
 });
 
 // Remover produto com justificativa (admin)
+// Remover produto com justificativa (admin)
 app.delete('/admin/products/:id', authenticateAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -580,7 +602,29 @@ app.delete('/admin/products/:id', authenticateAdmin, async (req, res) => {
         });
         if (!product) return res.status(404).json({ error: 'Produto não encontrado' });
 
-        await fs.unlink(path.join(__dirname, 'uploads', product.image));
+        const filePath = path.join(__dirname, 'uploads', product.image);
+        console.log('Tentando excluir arquivo:', filePath);
+
+        // Verifica e exclui o arquivo, se existir
+        try {
+            await fs.access(filePath);
+            await fs.unlink(filePath);
+            console.log('Arquivo excluído com sucesso:', filePath);
+        } catch (err) {
+            if (err.code === 'ENOENT') {
+                console.warn('Arquivo não encontrado, prosseguindo com a exclusão do produto:', filePath);
+            } else {
+                throw err;
+            }
+        }
+
+        // Exclui os favoritos associados ao produto
+        await prisma.favorite.deleteMany({
+            where: { productId: parseInt(id) },
+        });
+        console.log(`Favoritos associados ao produto ${id} excluídos.`);
+
+        // Exclui o produto do banco de dados
         await prisma.product.delete({ where: { id: parseInt(id) } });
 
         console.log(`Produto ${id} removido. Justificativa enviada para ${product.user.email}: ${reason}`);
@@ -614,6 +658,7 @@ app.get('/admin/settings', authenticateAdmin, async (req, res) => {
 // Atualizar configurações (nome do site, logo e favicon)
 // Atualizar configurações (nome do site, logo e favicon)
 // Atualizar configurações (nome do site, logo e favicon)
+// Atualizar configurações (nome do site, logo e favicon)
 app.put('/admin/settings', authenticateAdmin, upload.fields([
     { name: 'logo', maxCount: 1 },
     { name: 'favicon', maxCount: 1 }
@@ -635,28 +680,58 @@ app.put('/admin/settings', authenticateAdmin, upload.fields([
         // Processar logo (preservar transparência)
         if (files.logo) {
             const logoFile = files.logo[0];
-            const logoFilename = `${logoFile.filename}_logo.png`; // Usamos PNG para suportar transparência
+            const logoFilename = `${logoFile.filename}_logo.png`;
             const logoPath = path.join(__dirname, 'uploads', logoFilename);
             await sharp(logoFile.path)
-                .toFormat('png') // Alterado para PNG para suportar transparência
-                .resize(200, 200, { fit: 'contain' }) // Removido background, usa transparência por padrão
+                .toFormat('png')
+                .resize(200, 200, { fit: 'contain' })
                 .toFile(logoPath);
             await fs.unlink(logoFile.path);
-            if (settings.logoUrl) await fs.unlink(path.join(__dirname, 'uploads', settings.logoUrl));
+
+            // Verifica e exclui o logo antigo, se existir
+            if (settings.logoUrl) {
+                const oldLogoPath = path.join(__dirname, 'uploads', settings.logoUrl);
+                try {
+                    await fs.access(oldLogoPath);
+                    await fs.unlink(oldLogoPath);
+                    console.log('Logo antigo excluído com sucesso:', oldLogoPath);
+                } catch (err) {
+                    if (err.code === 'ENOENT') {
+                        console.warn('Logo antigo não encontrado, prosseguindo:', oldLogoPath);
+                    } else {
+                        throw err;
+                    }
+                }
+            }
             updatedData.logoUrl = logoFilename;
         }
 
         // Processar favicon (preservar transparência)
         if (files.favicon) {
             const faviconFile = files.favicon[0];
-            const faviconFilename = `${faviconFile.filename}_favicon.png`; // Mantém PNG para transparência
+            const faviconFilename = `${faviconFile.filename}_favicon.png`;
             const faviconPath = path.join(__dirname, 'uploads', faviconFilename);
             await sharp(faviconFile.path)
-                .toFormat('png') // Mantém PNG para suportar transparência
-                .resize(32, 32, { fit: 'contain' }) // Preserva transparência, sem fundo sólido
+                .toFormat('png')
+                .resize(32, 32, { fit: 'contain' })
                 .toFile(faviconPath);
             await fs.unlink(faviconFile.path);
-            if (settings.faviconUrl) await fs.unlink(path.join(__dirname, 'uploads', settings.faviconUrl));
+
+            // Verifica e exclui o favicon antigo, se existir
+            if (settings.faviconUrl) {
+                const oldFaviconPath = path.join(__dirname, 'uploads', settings.faviconUrl);
+                try {
+                    await fs.access(oldFaviconPath);
+                    await fs.unlink(oldFaviconPath);
+                    console.log('Favicon antigo excluído com sucesso:', oldFaviconPath);
+                } catch (err) {
+                    if (err.code === 'ENOENT') {
+                        console.warn('Favicon antigo não encontrado, prosseguindo:', oldFaviconPath);
+                    } else {
+                        throw err;
+                    }
+                }
+            }
             updatedData.faviconUrl = faviconFilename;
         }
 
