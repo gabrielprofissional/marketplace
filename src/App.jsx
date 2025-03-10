@@ -21,11 +21,6 @@ function App() {
     fetchUser()
   }, [])
 
-  const handleLogout = async () => {
-    setUser(null)
-    navigate('/auth')
-  }
-
   return (
     <div>
       <h1>Welcome to the App</h1>
@@ -33,21 +28,6 @@ function App() {
         <ul>
           <li>
             <Link to="/marketplace">Marketplace</Link>
-          </li>
-          {user ? (
-            <>
-              <li>Bem-vindo, {user.name}</li>
-              <li>
-                <button onClick={handleLogout}>Logout</button>
-              </li>
-            </>
-          ) : (
-            <li>
-              <Link to="/auth">Login</Link>
-            </li>
-          )}
-          <li>
-            <Link to="/admin">Admin</Link>
           </li>
         </ul>
       </nav>
