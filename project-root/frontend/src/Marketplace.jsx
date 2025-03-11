@@ -4,18 +4,17 @@ import './Marketplace.css'
 import { useNavigate } from 'react-router-dom'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import ReactSlider from 'react-slider'
 import { SettingsContext } from './SettingsContext'
 
 axios.defaults.withCredentials = true
 
 export default function Marketplace() {
-  const { settings, isLoading } = useContext(SettingsContext) // Acessa settings e isLoading
+  const { settings, isLoading } = useContext(SettingsContext)
   const [products, setProducts] = useState([])
   const [total, setTotal] = useState(0)
   const [offset, setOffset] = useState(0)
   const [limit] = useState(10)
-  const [isLoadingProducts, setIsLoadingProducts] = useState(false) // Renomeado para evitar conflito
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
@@ -26,12 +25,12 @@ export default function Marketplace() {
   const [user, setUser] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
   const [favorites, setFavorites] = useState([])
-  const [priceRange, setPriceRange] = useState([0, 1000])
-  const [sort, setSort] = useState('created_at')
+  // const [priceRange, setPriceRange] = useState([0, 1000]); // Comentado
+  // const [sort, setSort] = useState('created_at'); // Comentado
   const [showFavorites, setShowFavorites] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
+  const [isDarkMode, setIsDarkMode] = useState(false)
   const loaderRef = useRef(null)
   const navigate = useNavigate()
 
@@ -44,12 +43,12 @@ export default function Marketplace() {
     fetchProducts(true)
   }, [])
 
-  useEffect(() => {
-    setProducts([])
-    setOffset(0)
-    setHasMore(true)
-    fetchProducts(true)
-  }, [priceRange, sort])
+  // useEffect(() => {
+  //   setProducts([]);
+  //   setOffset(0);
+  //   setHasMore(true);
+  //   fetchProducts(true);
+  // }, [priceRange, sort]); // Comentado pois filtros foram removidos
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -85,9 +84,9 @@ export default function Marketplace() {
         params: {
           offset: reset ? 0 : offset,
           limit,
-          minPrice: priceRange[0],
-          maxPrice: priceRange[1],
-          sort,
+          // minPrice: priceRange[0], // Comentado
+          // maxPrice: priceRange[1], // Comentado
+          // sort, // Comentado
         },
       })
       const newProducts = response.data.products
@@ -220,6 +219,11 @@ export default function Marketplace() {
     navigate(`/users/${userId}`)
   }
 
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => !prev)
+    document.body.classList.toggle('dark-mode', !isDarkMode)
+  }
+
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -229,7 +233,7 @@ export default function Marketplace() {
   }
 
   return (
-    <div className="marketplace">
+    <div className={`marketplace ${isDarkMode ? 'dark-mode' : ''}`}>
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -237,15 +241,7 @@ export default function Marketplace() {
       />
       <header className="marketplace-header">
         <div className="header-content">
-          {settings.logoUrl && (
-            <img
-              src={`http://localhost:5000/uploads/${settings.logoUrl}`}
-              alt="Logo"
-              className="site-logo"
-            />
-          )}
-          <h1>{settings.siteName || 'Marketplace'}</h1>{' '}
-          {/* Fallback para "Marketplace" */}
+          <h1>{settings.siteName || 'Marketplace'}</h1>
           <div className="search-bar">
             <input
               type="text"
@@ -254,46 +250,103 @@ export default function Marketplace() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          {user ? (
-            <div>
-              <span>Bem-vindo, {user.name}</span>
-              <button className="logout-button" onClick={handleLogout}>
-                Logout
-              </button>
-            </div>
-          ) : (
-            <button onClick={() => navigate('/auth')}>Login</button>
-          )}
+          {user && <span className="welcome-text">Bem-vindo, {user.name}</span>}
         </div>
       </header>
 
       <div className="marketplace-content">
         <aside className="sidebar">
           {user && (
-            <>
-              <button
-                className={`add-button ${products.length === 0 && initialLoadComplete ? 'pulse' : ''}`}
-                onClick={() => {
-                  setEditProductId(null)
-                  setName('')
-                  setDescription('')
-                  setPrice('')
-                  setImage(null)
-                  setShowForm(true)
-                }}
-              >
-                Adicionar Produto
-              </button>
-              <button onClick={() => setShowFavorites(true)}>
-                Meus Favoritos
-              </button>
-              <button onClick={() => navigate('/profile')}>Meu Perfil</button>
-            </>
+            <div className="sidebar-content">
+              {settings.logoUrl && (
+                <img
+                  src={`http://localhost:5000/uploads/${settings.logoUrl}`}
+                  alt="Logo"
+                  className="sidebar-logo"
+                />
+              )}
+              <div className="sidebar-buttons">
+                <button
+                  className={`sidebar-btn ${products.length === 0 && initialLoadComplete ? 'pulse' : ''}`}
+                  onClick={() => {
+                    setEditProductId(null)
+                    setName('')
+                    setDescription('')
+                    setPrice('')
+                    setImage(null)
+                    setShowForm(true)
+                  }}
+                >
+                  Adicionar Produto
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => setShowFavorites(true)}
+                >
+                  Meus Favoritos
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/profile')}
+                >
+                  Meu Perfil
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/sales')}
+                >
+                  Vendas
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/my-products')}
+                >
+                  Produtos
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/finances')}
+                >
+                  Finanças
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/integrations')}
+                >
+                  Integrações
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/purchases')}
+                >
+                  Compras
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/refer-and-earn')}
+                >
+                  Indique e Ganhe
+                </button>
+                <button
+                  className="sidebar-btn theme-toggle"
+                  onClick={toggleTheme}
+                >
+                  {isDarkMode ? 'Claro' : 'Escuro'}
+                </button>
+                <button
+                  className="sidebar-btn logout-btn"
+                  onClick={handleLogout}
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
           )}
         </aside>
 
         <main className="product-area">
-          <div className="filters">
+          {/* Filtros comentados */}
+          {/* <div className="filters">
             <div className="price-filter">
               <label>
                 Faixa de Preço: R$ {priceRange[0]} - R$ {priceRange[1]}
@@ -316,7 +369,7 @@ export default function Marketplace() {
               <option value="price">Menor preço</option>
               <option value="-price">Maior preço</option>
             </select>
-          </div>
+          </div> */}
 
           {!initialLoadComplete ? (
             <p className="loading-text">Carregando produtos...</p>
@@ -367,7 +420,7 @@ export default function Marketplace() {
             </p>
           ) : (
             <p className="no-products">
-              Nenhum produto encontrado para esses filtros.
+              Nenhum produto encontrado para essa busca.
             </p>
           )}
 
@@ -401,26 +454,6 @@ export default function Marketplace() {
                 <p>Nenhum produto favoritado ainda.</p>
               )}
               <button onClick={() => setShowFavorites(false)}>Fechar</button>
-            </div>
-          )}
-
-          {showProfile && user && (
-            <div className="profile-section">
-              <h2>Meu Perfil</h2>
-              <p>
-                <strong>Nome:</strong> {user.name}
-              </p>
-              <p>
-                <strong>Email:</strong> {user.email}
-              </p>
-              <p>
-                <strong>Produtos Cadastrados:</strong>{' '}
-                {products.filter((p) => p.userId === user.id).length}
-              </p>
-              <p>
-                <strong>Vendas Realizadas:</strong> 0 (A implementar)
-              </p>
-              <button onClick={() => setShowProfile(false)}>Fechar</button>
             </div>
           )}
 
