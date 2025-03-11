@@ -5,6 +5,9 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import './Profile.css'
 
+// Configuração global do Axios
+axios.defaults.withCredentials = true // Define withCredentials globalmente
+
 export default function Profile() {
   const [user, setUser] = useState(null)
   const [products, setProducts] = useState([])
@@ -19,14 +22,24 @@ export default function Profile() {
   const fetchProfileData = async () => {
     try {
       setLoading(true)
+      console.log('Buscando dados de /me...')
       const userResponse = await axios.get('http://localhost:5000/me')
+      console.log('Resposta de /me:', userResponse.data)
       setUser(userResponse.data)
+
+      console.log(
+        `Buscando produtos de /users/${userResponse.data.id}/products...`
+      )
       const productsResponse = await axios.get(
         `http://localhost:5000/users/${userResponse.data.id}/products`
       )
+      console.log('Resposta de produtos:', productsResponse.data)
       setProducts(productsResponse.data.products)
     } catch (error) {
-      console.error('Erro ao carregar perfil:', error)
+      console.error(
+        'Erro ao carregar perfil:',
+        error.response?.data || error.message
+      )
       toast.error('Erro ao carregar perfil. Redirecionando para login...')
       navigate('/auth')
     } finally {

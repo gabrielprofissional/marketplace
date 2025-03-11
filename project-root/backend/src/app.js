@@ -9,7 +9,14 @@ import userRoutes from './routes/userRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 
 const app = express()
-
+app.use(
+  cors({
+    origin: 'http://localhost:5173', // Porta do frontend (ajuste se necessário)
+    credentials: true, // Permite cookies em todas as rotas
+    methods: ['GET', 'POST', 'PUT', 'DELETE'], // Métodos permitidos
+    allowedHeaders: ['Content-Type', 'Authorization'], // Cabeçalhos permitidos
+  })
+)
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -29,6 +36,7 @@ app.use('/uploads', express.static(config.uploadPath))
 
 app.use('/', authRoutes)
 app.use('/products', productRoutes)
+app.use('/users', userRoutes)
 app.use('/', userRoutes)
 app.use('/admin', adminRoutes)
 

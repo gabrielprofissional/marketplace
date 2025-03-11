@@ -35,38 +35,25 @@ export const register = async (req, res) => {
 }
 
 export const login = async (req, res) => {
+  const { email, password } = req.body
   try {
-    const { email, password } = req.body
     const user = await UserModel.findByEmail(email)
-    if (!user) return res.status(401).json({ error: 'Usuário não encontrado' })
-
-    const isPasswordValid = await bcrypt.compare(password, user.password)
-    if (!isPasswordValid)
-      return res.status(401).json({ error: 'Senha incorreta' })
-
-    const token = jwt.sign(
-      { id: user.id, email: user.email },
-      config.SECRET_KEY,
-      { expiresIn: '15m' }
-    )
-    const refreshToken = jwt.sign({ id: user.id }, config.SECRET_KEY, {
-      expiresIn: '7d',
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      return res.status(401).json({ error: 'Credenciais inválidas' })
+    }
+    const token = jwt.sign({ id: user.id }, config.SECRET_KEY, {
+      expiresIn: '1h',
     })
-
     res.cookie('token', token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 15 * 60 * 1000,
+      httpOnly: true, // Impede acesso via JavaScript
+      secure: process.env.NODE_ENV === 'production', // True em produção com HTTPS
+      sameSite: 'Lax', // 'Lax' permite envio em navegação, ajuste para 'Strict' se necessário
+      maxAge: 3600000, // 1 hora em milissegundos
     })
-    res.cookie('refreshToken', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
+    res.json({
+      message: 'Login bem-sucedido',
+      user: { id: user.id, name: user.name, email: user.email },
     })
-
-    res.status(200).json({ message: 'Login bem-sucedido', user })
   } catch (error) {
     console.error('Erro ao fazer login:', error)
     res.status(500).json({ error: 'Erro interno do servidor' })

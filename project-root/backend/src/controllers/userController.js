@@ -1,6 +1,5 @@
-import prisma from '../config/database.js'
 import { UserModel } from '../models/user.js'
-import { ProductModel } from '../models/product.js' // Certifique-se de que este import está presente
+import { ProductModel } from '../models/product.js'
 import { FavoriteModel } from '../models/favorite.js'
 import { promises as fs } from 'fs'
 import path from 'path'
@@ -9,6 +8,7 @@ import { processProfileImage } from '../utils/imageProcessing.js'
 
 export const getMe = async (req, res) => {
   try {
+    console.log('getMe - req.user:', req.user) // Log para verificar
     const user = await UserModel.findById(req.user.id)
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
     res.json(user)
@@ -53,6 +53,27 @@ export const updateMe = async (req, res) => {
 export const getUserProducts = async (req, res) => {
   try {
     const { id } = req.params
+    console.log('getUserProducts - Token:', req.cookies.token)
+    console.log('getUserProducts - req.user antes da verificação:', req.user)
+
+    if (!req.user || !req.user.id) {
+      console.log('req.user não definido:', req.user)
+      return res.status(401).json({ error: 'Autenticação inválida ou ausente' })
+    }
+
+    const requestingUser = await UserModel.findById(req.user.id)
+    if (!requestingUser) {
+      return res
+        .status(401)
+        .json({ error: 'Usuário autenticado não encontrado' })
+    }
+
+    if (parseInt(id) !== req.user.id && !requestingUser.isAdmin) {
+      return res.status(403).json({
+        error: 'Acesso negado: você só pode ver seus próprios produtos',
+      })
+    }
+
     const user = await UserModel.findById(id)
     if (!user) return res.status(404).json({ error: 'Usuário não encontrado' })
 
@@ -85,25 +106,15 @@ export const removeFavorite = async (req, res) => {
       return res.status(400).json({ error: 'productId inválido' })
     }
 
-    const existingFavorite = await prisma.favorite.findUnique({
-      where: {
-        userId_productId: {
-          userId: req.user.id,
-          productId: parseInt(productId),
-        },
-      },
-    })
-    if (!existingFavorite)
+    const existingFavorite = await FavoriteModel.findOne(
+      req.user.id,
+      parseInt(productId)
+    )
+    if (!existingFavorite) {
       return res.status(404).json({ error: 'Favorito não encontrado' })
+    }
 
-    await prisma.favorite.delete({
-      where: {
-        userId_productId: {
-          userId: req.user.id,
-          productId: parseInt(productId),
-        },
-      },
-    })
+    await FavoriteModel.delete(req.user.id, parseInt(productId))
     res.json({ message: 'Produto removido dos favoritos' })
   } catch (error) {
     console.error('Erro ao remover favorito:', error)
@@ -113,10 +124,7 @@ export const removeFavorite = async (req, res) => {
 
 export const getFavorites = async (req, res) => {
   try {
-    const favorites = await prisma.favorite.findMany({
-      where: { userId: req.user.id },
-      include: { product: true },
-    })
+    const favorites = await FavoriteModel.findByUserId(req.user.id)
     res.json(favorites)
   } catch (error) {
     console.error('Erro ao listar favoritos:', error)
