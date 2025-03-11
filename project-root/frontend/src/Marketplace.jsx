@@ -241,7 +241,11 @@ export default function Marketplace() {
       />
       <header className="marketplace-header">
         <div className="header-content">
-          <h1>{settings.siteName || 'Marketplace'}</h1>
+          <h1>
+            {settings.siteName !== undefined && settings.siteName !== ''
+              ? settings.siteName
+              : 'Marketplace'}
+          </h1>{' '}
           <div className="search-bar">
             <input
               type="text"

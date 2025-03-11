@@ -48,7 +48,7 @@ export default function Admin() {
     try {
       const response = await axios.get('http://localhost:5000/admin/settings')
       setSettings(response.data)
-      setNewSiteName(response.data.siteName)
+      setNewSiteName(response.data.siteName || '')
     } catch (error) {
       console.error('Erro ao buscar configurações:', error)
       toast.error('Erro ao carregar configurações.')
@@ -110,7 +110,7 @@ export default function Admin() {
   const handleUpdateSettings = async (e) => {
     e.preventDefault()
     const formData = new FormData()
-    if (newSiteName) formData.append('siteName', newSiteName)
+    formData.append('siteName', newSiteName) // Sempre envia, mesmo vazio
     if (newLogo) formData.append('logo', newLogo)
     if (newFavicon) formData.append('favicon', newFavicon)
 
@@ -122,17 +122,48 @@ export default function Admin() {
           headers: { 'Content-Type': 'multipart/form-data' },
         }
       )
-      setSettings(response.data.settings) // Atualiza o estado local
+      console.log('Resposta do backend:', response.data)
+      setSettings(response.data.settings) // Atualiza o estado com o retorno
+      setNewSiteName(response.data.settings.siteName) // Garante que o input reflita o valor retornado
       setNewLogo(null)
       setNewFavicon(null)
       toast.success('Configurações atualizadas com sucesso!')
-      fetchSettings() // Recarrega as configurações para garantir consistência
+      fetchSettings() // Recarrega as configurações
     } catch (error) {
       console.error('Erro ao atualizar configurações:', error)
       toast.error('Erro ao atualizar configurações.')
     }
   }
 
+  const handleRemoveLogo = async () => {
+    try {
+      const response = await axios.put('http://localhost:5000/admin/settings', {
+        logoUrl: 'null',
+      })
+      setSettings(response.data.settings) // Usa o retorno do backend
+      setNewLogo(null)
+      toast.success('Logo removida com sucesso!')
+      fetchSettings() // Sincroniza com o backend
+    } catch (error) {
+      console.error('Erro ao remover logo:', error)
+      toast.error('Erro ao remover logo.')
+    }
+  }
+
+  const handleRemoveFavicon = async () => {
+    try {
+      const response = await axios.put('http://localhost:5000/admin/settings', {
+        faviconUrl: 'null',
+      })
+      setSettings(response.data.settings) // Usa o retorno do backend
+      setNewFavicon(null)
+      toast.success('Favicon removido com sucesso!')
+      fetchSettings() // Sincroniza com o backend
+    } catch (error) {
+      console.error('Erro ao remover favicon:', error)
+      toast.error('Erro ao remover favicon.')
+    }
+  }
   const toggleProducts = (userId) => {
     setExpandedUsers((prev) => ({
       ...prev,
@@ -205,17 +236,26 @@ export default function Admin() {
                   id="siteName"
                   value={newSiteName}
                   onChange={(e) => setNewSiteName(e.target.value)}
-                  placeholder="Digite o nome do site"
+                  placeholder="Digite o nome do site (deixe em branco para remover)"
                 />
               </div>
               <div className="form-group">
                 <label>Logo Atual:</label>
                 {settings.logoUrl ? (
-                  <img
-                    src={`http://localhost:5000/uploads/${settings.logoUrl}`}
-                    alt="Logo atual"
-                    className="current-logo"
-                  />
+                  <div className="image-container">
+                    <img
+                      src={`http://localhost:5000/uploads/${settings.logoUrl}`}
+                      alt="Logo atual"
+                      className="current-logo"
+                    />
+                    <button
+                      type="button"
+                      className="remove-btn"
+                      onClick={handleRemoveLogo}
+                    >
+                      Remover Logo
+                    </button>
+                  </div>
                 ) : (
                   <p>Sem logo definida</p>
                 )}
@@ -229,15 +269,25 @@ export default function Admin() {
                 <label htmlFor="logo-input" className="upload-btn">
                   Escolher Nova Logo
                 </label>
+                {newLogo && <span className="file-name">{newLogo.name}</span>}
               </div>
               <div className="form-group">
                 <label>Favicon Atual:</label>
                 {settings.faviconUrl ? (
-                  <img
-                    src={`http://localhost:5000/uploads/${settings.faviconUrl}`}
-                    alt="Favicon atual"
-                    className="current-favicon"
-                  />
+                  <div className="image-container">
+                    <img
+                      src={`http://localhost:5000/uploads/${settings.faviconUrl}`}
+                      alt="Favicon atual"
+                      className="current-favicon"
+                    />
+                    <button
+                      type="button"
+                      className="remove-btn"
+                      onClick={handleRemoveFavicon}
+                    >
+                      Remover Favicon
+                    </button>
+                  </div>
                 ) : (
                   <p>Sem favicon definido</p>
                 )}
@@ -251,6 +301,9 @@ export default function Admin() {
                 <label htmlFor="favicon-input" className="upload-btn">
                   Escolher Novo Favicon
                 </label>
+                {newFavicon && (
+                  <span className="file-name">{newFavicon.name}</span>
+                )}
               </div>
               <button type="submit" className="save-btn">
                 Salvar Configurações

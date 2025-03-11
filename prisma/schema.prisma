@@ -45,8 +45,8 @@ model Favorite {
 }
 model Settings {
   id          Int      @id @default(autoincrement())
-  siteName    String   @default("Marketplace")
-  logoUrl     String?  // Caminho da logo no servidor
-  faviconUrl  String?  // Caminho do favicon no servidor
+  siteName    String?  // Agora pode ser null
+  logoUrl     String?
+  faviconUrl  String?
   updatedAt   DateTime @updatedAt
 }
