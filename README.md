@@ -54,3 +54,8 @@ npm run dev
 cd ../backend
 npm run dev
 
+
+## 📩 Contato
+Caso tenha interesse em saber mais sobre este projeto ou colaborar, entre em contato:
+📧 Email: dev.gabrielteles@gmail.com
+
