@@ -17,7 +17,7 @@ export default function Auth() {
     e.preventDefault()
     try {
       await axios.post('http://localhost:5000/login', { email, password })
-      navigate('/marketplace')
+      navigate('/dashboard') // Redireciona para o dashboard
     } catch (err) {
       setError(err.response?.data?.error || 'Erro ao fazer login')
     }

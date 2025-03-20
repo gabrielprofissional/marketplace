@@ -11,6 +11,7 @@ import Profile from './Profile.jsx'
 import Marketplace from './Marketplace.jsx'
 import App from './App.jsx'
 import './index.css'
+import Dashboard from './Dashboard.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -24,6 +25,7 @@ createRoot(document.getElementById('root')).render(
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/users/:id" element={<SellerProfile />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/dashboard" element={<Dashboard />} />
         </Routes>
       </Router>
     </SettingsProvider>
