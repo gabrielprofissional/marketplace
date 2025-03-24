@@ -35,7 +35,7 @@ Antes de começar, certifique-se de ter instalado:
 
 ### 📥 Clonando o repositório
 ```sh
-git clone https://github.com/seu-usuario/seu-repositorio.git
+git clone github.com/gabrielprofissional/marketplace.git
 cd seu-repositorio
 
 # Para o frontend
