@@ -214,9 +214,7 @@ export default function Admin() {
           <option value="createdAt">Ordenar por Data de Criação</option>
           <option value="status">Ordenar por Status</option>
         </select>
-        <button onClick={() => navigate('/marketplace')}>
-          Voltar ao Marketplace
-        </button>
+        <button onClick={() => navigate('/marketplace')}>Voltar</button>
       </header>
       <main className="admin-content">
         {/* Seção de Configurações Expansível */}

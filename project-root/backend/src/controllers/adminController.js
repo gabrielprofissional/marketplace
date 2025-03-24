@@ -115,7 +115,7 @@ export const updateSettings = async (req, res) => {
     if (!settings) {
       console.log('Nenhuma configuração encontrada, criando nova...')
       settings = await prisma.settings.create({
-        data: { siteName: 'Marketplace' },
+        data: { siteName: '' },
       })
     }
 

@@ -12,7 +12,7 @@ export const SettingsModel = {
     let settings = await prisma.settings.findFirst()
     if (!settings) {
       settings = await prisma.settings.create({
-        data: { siteName: 'Marketplace', logoUrl: null, faviconUrl: null },
+        data: { siteName: '', logoUrl: null, faviconUrl: null },
       })
     }
     return settings

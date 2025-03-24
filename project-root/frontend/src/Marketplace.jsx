@@ -25,8 +25,6 @@ export default function Marketplace() {
   const [user, setUser] = useState(null)
   const [editProductId, setEditProductId] = useState(null)
   const [favorites, setFavorites] = useState([])
-  // const [priceRange, setPriceRange] = useState([0, 1000]); // Comentado
-  // const [sort, setSort] = useState('created_at'); // Comentado
   const [showFavorites, setShowFavorites] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
@@ -42,13 +40,6 @@ export default function Marketplace() {
     fetchFavorites()
     fetchProducts(true)
   }, [])
-
-  // useEffect(() => {
-  //   setProducts([]);
-  //   setOffset(0);
-  //   setHasMore(true);
-  //   fetchProducts(true);
-  // }, [priceRange, sort]); // Comentado pois filtros foram removidos
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -84,9 +75,6 @@ export default function Marketplace() {
         params: {
           offset: reset ? 0 : offset,
           limit,
-          // minPrice: priceRange[0], // Comentado
-          // maxPrice: priceRange[1], // Comentado
-          // sort, // Comentado
         },
       })
       const newProducts = response.data.products
@@ -241,11 +229,6 @@ export default function Marketplace() {
       />
       <header className="marketplace-header">
         <div className="header-content">
-          <h1>
-            {settings.siteName !== undefined && settings.siteName !== ''
-              ? settings.siteName
-              : 'Marketplace'}
-          </h1>{' '}
           <div className="search-bar">
             <input
               type="text"
@@ -268,6 +251,9 @@ export default function Marketplace() {
                   alt="Logo"
                   className="sidebar-logo"
                 />
+              )}
+              {settings.siteName && settings.siteName !== '' && (
+                <h1 className="sidebar-title">{settings.siteName}</h1>
               )}
               <div className="sidebar-buttons">
                 <button
@@ -349,32 +335,6 @@ export default function Marketplace() {
         </aside>
 
         <main className="product-area">
-          {/* Filtros comentados */}
-          {/* <div className="filters">
-            <div className="price-filter">
-              <label>
-                Faixa de Preço: R$ {priceRange[0]} - R$ {priceRange[1]}
-              </label>
-              <ReactSlider
-                className="price-slider"
-                thumbClassName="price-thumb"
-                trackClassName="price-track"
-                value={priceRange}
-                onChange={(value) => setPriceRange(value)}
-                min={0}
-                max={1000}
-                step={10}
-                pearling
-                minDistance={10}
-              />
-            </div>
-            <select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="created_at">Mais recente</option>
-              <option value="price">Menor preço</option>
-              <option value="-price">Maior preço</option>
-            </select>
-          </div> */}
-
           {!initialLoadComplete ? (
             <p className="loading-text">Carregando produtos...</p>
           ) : filteredProducts.length > 0 ? (
@@ -494,6 +454,43 @@ export default function Marketplace() {
             </div>
           )}
         </main>
+
+        {/* Bottom Bar para dispositivos móveis */}
+        {user && (
+          <div className="bottom-bar">
+            <button
+              className="bottom-bar-btn"
+              onClick={() => {
+                setEditProductId(null)
+                setName('')
+                setDescription('')
+                setPrice('')
+                setImage(null)
+                setShowForm(true)
+              }}
+            >
+              Adicionar Produto
+            </button>
+            <button
+              className="bottom-bar-btn"
+              onClick={() => navigate('/finances')}
+            >
+              Finanças
+            </button>
+            <button
+              className="bottom-bar-btn"
+              onClick={() => navigate('/sales')}
+            >
+              Vendas
+            </button>
+            <button
+              className="bottom-bar-btn"
+              onClick={() => navigate('/profile')}
+            >
+              Perfil
+            </button>
+          </div>
+        )}
       </div>
 
       {showForm && user && (

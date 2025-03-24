@@ -5,7 +5,7 @@ export const SettingsContext = createContext()
 
 export const SettingsProvider = ({ children }) => {
   const [settings, setSettings] = useState({
-    siteName: 'Marketplace',
+    siteName: '',
     logoUrl: null,
     faviconUrl: null,
   })
