@@ -6,6 +6,21 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { SettingsContext } from './SettingsContext'
 
+// Ícones (você pode usar uma biblioteca como react-icons para os ícones)
+import {
+  FaTachometerAlt,
+  FaShoppingCart,
+  FaStore,
+  FaBox,
+  FaMoneyBillWave,
+  FaPlug,
+  FaShoppingBag,
+  FaGift,
+  FaMoon,
+  FaCog,
+  FaUser,
+} from 'react-icons/fa'
+
 axios.defaults.withCredentials = true
 
 export default function Marketplace() {
@@ -245,89 +260,77 @@ export default function Marketplace() {
         <aside className="sidebar">
           {user && (
             <div className="sidebar-content">
+              <h1 className="sidebar-title">{settings.siteName || ''}</h1>
               {settings.logoUrl && (
                 <img
                   src={`http://localhost:5000/uploads/${settings.logoUrl}`}
-                  alt="Logo"
+                  alt="Logo do site"
                   className="sidebar-logo"
                 />
               )}
-              {settings.siteName && settings.siteName !== '' && (
-                <h1 className="sidebar-title">{settings.siteName}</h1>
-              )}
-              <div className="sidebar-buttons">
+              <nav className="sidebar-nav">
                 <button
-                  className={`sidebar-btn ${products.length === 0 && initialLoadComplete ? 'pulse' : ''}`}
-                  onClick={() => {
-                    setEditProductId(null)
-                    setName('')
-                    setDescription('')
-                    setPrice('')
-                    setImage(null)
-                    setShowForm(true)
-                  }}
+                  className="sidebar-btn active"
+                  onClick={() => navigate('/dashboard')}
                 >
-                  Adicionar Produto
-                </button>
-                <button
-                  className="sidebar-btn"
-                  onClick={() => setShowFavorites(true)}
-                >
-                  Meus Favoritos
-                </button>
-                <button
-                  className="sidebar-btn"
-                  onClick={() => navigate('/profile')}
-                >
-                  Meu Perfil
+                  <FaTachometerAlt className="sidebar-icon" /> Dashboard
                 </button>
                 <button
                   className="sidebar-btn"
                   onClick={() => navigate('/sales')}
                 >
-                  Vendas
+                  <FaShoppingCart className="sidebar-icon" /> Vendas
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => navigate('/marketplace')}
+                >
+                  <FaStore className="sidebar-icon" /> Marketplace
                 </button>
                 <button
                   className="sidebar-btn"
                   onClick={() => navigate('/my-products')}
                 >
-                  Produtos
+                  <FaBox className="sidebar-icon" /> Produtos
                 </button>
                 <button
                   className="sidebar-btn"
                   onClick={() => navigate('/finances')}
                 >
-                  Finanças
+                  <FaMoneyBillWave className="sidebar-icon" /> Finanças
                 </button>
                 <button
                   className="sidebar-btn"
                   onClick={() => navigate('/integrations')}
                 >
-                  Integrações
+                  <FaPlug className="sidebar-icon" /> Integrações
                 </button>
                 <button
                   className="sidebar-btn"
                   onClick={() => navigate('/purchases')}
                 >
-                  Compras
+                  <FaShoppingBag className="sidebar-icon" /> Compras
                 </button>
                 <button
                   className="sidebar-btn"
                   onClick={() => navigate('/refer-and-earn')}
                 >
-                  Indique e Ganhe
+                  <FaGift className="sidebar-icon" /> Indique e Ganhe
                 </button>
+              </nav>
+              <div className="sidebar-footer">
                 <button
                   className="sidebar-btn theme-toggle"
                   onClick={toggleTheme}
                 >
+                  <FaMoon className="sidebar-icon" />{' '}
                   {isDarkMode ? 'Claro' : 'Escuro'}
                 </button>
                 <button
-                  className="sidebar-btn logout-btn"
-                  onClick={handleLogout}
+                  className="sidebar-btn"
+                  onClick={() => navigate('/settings')}
                 >
-                  Logout
+                  <FaCog className="sidebar-icon" /> Configurações
                 </button>
               </div>
             </div>
@@ -455,7 +458,6 @@ export default function Marketplace() {
           )}
         </main>
 
-        {/* Bottom Bar para dispositivos móveis */}
         {user && (
           <div className="bottom-bar">
             <button

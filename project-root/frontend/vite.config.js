@@ -7,7 +7,10 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
-  root: path.resolve(__dirname), // Aponta para frontend/
+  root: path.resolve(__dirname), // Aponta para project-root/
+  css: {
+    postcss: path.resolve(__dirname, '../postcss.config.cjs'), // Aponta para postcss.config.cjs em marketplace/
+  },
   server: {
     port: 5173,
     proxy: {
