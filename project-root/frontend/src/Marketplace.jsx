@@ -224,7 +224,7 @@ export default function Marketplace() {
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => !prev)
-    document.body.classList.toggle('dark-mode', !isDarkMode)
+    document.body.classList.toggle('white-mode', !isDarkMode)
   }
 
   const filteredProducts = products.filter((product) =>
@@ -236,7 +236,7 @@ export default function Marketplace() {
   }
 
   return (
-    <div className={`marketplace ${isDarkMode ? 'dark-mode' : ''}`}>
+    <div className={`marketplace ${isDarkMode ? 'white-mode' : ''}`}>
       <ToastContainer
         position="top-right"
         autoClose={3000}
