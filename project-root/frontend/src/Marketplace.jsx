@@ -289,7 +289,7 @@ export default function Marketplace() {
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/my-products')}
+                  onClick={() => navigate('/myproducts')}
                 >
                   <FaBox className="sidebar-icon" /> Produtos
                 </button>
