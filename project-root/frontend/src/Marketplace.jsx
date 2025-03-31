@@ -6,7 +6,6 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { SettingsContext } from './SettingsContext'
 
-// Ícones (você pode usar uma biblioteca como react-icons para os ícones)
 import {
   FaTachometerAlt,
   FaShoppingCart,
@@ -18,7 +17,9 @@ import {
   FaGift,
   FaMoon,
   FaCog,
+  FaUserCircle,
   FaUser,
+  FaBars, // Ícone de menu para o botão
 } from 'react-icons/fa'
 
 axios.defaults.withCredentials = true
@@ -44,6 +45,7 @@ export default function Marketplace() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [initialLoadComplete, setInitialLoadComplete] = useState(false)
   const [isDarkMode, setIsDarkMode] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false) // Novo estado para controlar a sidebar em mobile
   const loaderRef = useRef(null)
   const navigate = useNavigate()
 
@@ -227,6 +229,10 @@ export default function Marketplace() {
     document.body.classList.toggle('white-mode', !isDarkMode)
   }
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen((prev) => !prev)
+  }
+
   const filteredProducts = products.filter((product) =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -244,6 +250,9 @@ export default function Marketplace() {
       />
       <header className="marketplace-header">
         <div className="header-content">
+          <button className="menu-btn" onClick={toggleSidebar}>
+            <FaBars />
+          </button>
           <div className="search-bar">
             <input
               type="text"
@@ -257,7 +266,7 @@ export default function Marketplace() {
       </header>
 
       <div className="marketplace-content">
-        <aside className="sidebar">
+        <aside className={`sidebar ${isSidebarOpen ? 'sidebar-open' : ''}`}>
           {user && (
             <div className="sidebar-content">
               <h1 className="sidebar-title">{settings.siteName || ''}</h1>
@@ -271,64 +280,103 @@ export default function Marketplace() {
               <nav className="sidebar-nav">
                 <button
                   className="sidebar-btn active"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => {
+                    navigate('/dashboard')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaTachometerAlt className="sidebar-icon" /> Dashboard
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/sales')}
+                  onClick={() => {
+                    navigate('/sales')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaShoppingCart className="sidebar-icon" /> Vendas
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/marketplace')}
+                  onClick={() => {
+                    navigate('/marketplace')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaStore className="sidebar-icon" /> Marketplace
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/myproducts')}
+                  onClick={() => {
+                    navigate('/myproducts')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaBox className="sidebar-icon" /> Produtos
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/finances')}
+                  onClick={() => {
+                    navigate('/finances')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaMoneyBillWave className="sidebar-icon" /> Finanças
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/integrations')}
+                  onClick={() => {
+                    navigate('/integrations')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaPlug className="sidebar-icon" /> Integrações
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/purchases')}
+                  onClick={() => {
+                    navigate('/purchases')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaShoppingBag className="sidebar-icon" /> Compras
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/refer-and-earn')}
+                  onClick={() => {
+                    navigate('/refer-and-earn')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaGift className="sidebar-icon" /> Indique e Ganhe
+                </button>
+                <button
+                  className="sidebar-btn"
+                  onClick={() => {
+                    navigate('/profile')
+                    setIsSidebarOpen(false)
+                  }}
+                >
+                  <FaUser className="sidebar-icon" /> Perfil
                 </button>
               </nav>
               <div className="sidebar-footer">
                 <button
                   className="sidebar-btn theme-toggle"
-                  onClick={toggleTheme}
+                  onClick={() => {
+                    toggleTheme()
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaMoon className="sidebar-icon" />{' '}
                   {isDarkMode ? 'Claro' : 'Escuro'}
                 </button>
                 <button
                   className="sidebar-btn"
-                  onClick={() => navigate('/settings')}
+                  onClick={() => {
+                    navigate('/settings')
+                    setIsSidebarOpen(false)
+                  }}
                 >
                   <FaCog className="sidebar-icon" /> Configurações
                 </button>
@@ -457,42 +505,6 @@ export default function Marketplace() {
             </div>
           )}
         </main>
-
-        {user && (
-          <div className="bottom-bar">
-            <button
-              className="bottom-bar-btn"
-              onClick={() => {
-                setEditProductId(null)
-                setName('')
-                setDescription('')
-                setPrice('')
-                setImage(null)
-                setShowForm(true)
-              }}
-            >
-              Adicionar Produto
-            </button>
-            <button
-              className="bottom-bar-btn"
-              onClick={() => navigate('/finances')}
-            >
-              Finanças
-            </button>
-            <button
-              className="bottom-bar-btn"
-              onClick={() => navigate('/sales')}
-            >
-              Vendas
-            </button>
-            <button
-              className="bottom-bar-btn"
-              onClick={() => navigate('/profile')}
-            >
-              Perfil
-            </button>
-          </div>
-        )}
       </div>
 
       {showForm && user && (

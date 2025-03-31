@@ -98,7 +98,7 @@ export default function Myproducts() {
       setImage(null)
       setShowForm(false)
       setEditProductId(null)
-      fetchProfileData() // Atualiza a lista de produtos após adicionar/editar
+      fetchProfileData()
     } catch (error) {
       console.error('Erro ao salvar produto:', error)
       toast.error('Erro ao salvar produto!')
@@ -120,7 +120,7 @@ export default function Myproducts() {
     try {
       await axios.delete(`http://localhost:5000/products/${id}`)
       toast.success('Produto excluído com sucesso!')
-      fetchProfileData() // Atualiza a lista de produtos após excluir
+      fetchProfileData()
     } catch (error) {
       console.error('Erro ao excluir produto:', error)
       toast.error('Erro ao excluir produto!')
