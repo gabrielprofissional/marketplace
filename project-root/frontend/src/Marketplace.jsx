@@ -312,7 +312,7 @@ export default function Marketplace() {
                     setIsSidebarOpen(false)
                   }}
                 >
-                  <FaBox className="sidebar-icon" /> Produtos
+                  <FaBox className="sidebar-icon" /> Meus Produtos
                 </button>
                 <button
                   className="sidebar-btn"

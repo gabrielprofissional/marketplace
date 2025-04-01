@@ -6,27 +6,19 @@
   padding: 0;
   box-sizing: border-box;
   font-family:
-    ui-sans-serif,
-    system-ui,
-    sans-serif,
-    Apple Color Emoji,
-    Segoe UI Emoji,
-    Segoe UI Symbol,
-    Noto Color Emoji;
-}
-.body.input.p.button {
-  font-family: Satoshi;
+    ui-sans-serif, system-ui, sans-serif, 'Open Sans', 'Apple Color Emoji',
+    'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
 }
 
-/* Tema Claro (Padrão) */
+/* Tema Escuro (Padrão) */
 :root {
   --bg-primary: #171717;
-  --bg-secondary: #ffffff;
-  --text-primary: #2c3e50;
-  --text-secondary: #7f8c8d;
+  --bg-secondary: #1a1a1a;
+  --text-primary: #ffffff;
+  --text-secondary: #ffffff;
   --accent: #3498db;
   --accent-hover: #2980b9;
-  --border: #dfe6e9;
+  --border: #ecf0f1;
   --shadow: rgba(0, 0, 0, 0.05);
   --price: #e74c3c;
   --button-bg: #ecf0f1;
@@ -34,20 +26,20 @@
 
 /* Tema Claro */
 .white-mode {
-  --bg-primary: #ffffff;
+  --bg-primary: #f1f1f1;
   --bg-secondary: #343a40;
-  --text-primary: #f8f9fa;
-  --text-secondary: #adb5bd;
+  --text-primary: #000000;
+  --text-secondary: #000000;
   --accent: #4dabf7;
   --accent-hover: #339af0;
   --border: #495057;
   --shadow: rgba(0, 0, 0, 0.2);
-  --price: #ff8787;
+  --price: #e74c3c;
   --button-bg: #495057;
 }
 
-.white-mode .search-bar.input {
-  background-color: var(--bg-secondary);
+.white-mode .search-bar input {
+  background-color: transparent;
   color: var(--text-primary);
   border: 1px solid var(--border);
 }
@@ -69,7 +61,6 @@
 }
 
 /* Header */
-/* Estilo do Header */
 .marketplace-header {
   padding: 20px;
   background: transparent;
@@ -80,6 +71,7 @@
   display: flex;
   justify-content: center;
 }
+
 .header-content {
   display: flex;
   align-items: center;
@@ -90,10 +82,11 @@
   padding: 0 20px;
   box-sizing: border-box;
   position: relative;
-  gap: 10px; /* Espaço entre o botão de menu e o search-bar */
+  gap: 10px;
 }
+
 .menu-btn {
-  display: none; /* Escondido por padrão em telas grandes */
+  display: none;
   background: none;
   border: none;
   font-size: 24px;
@@ -101,10 +94,11 @@
   cursor: pointer;
   padding: 5px;
 }
+
 .search-bar {
-  max-width: 500px; /* Mantém a largura máxima */
+  max-width: 500px;
   min-width: 300px;
-  width: 100%; /* Permite que ela se ajuste ao espaço disponível */
+  width: 100%;
 }
 
 .search-bar input {
@@ -114,7 +108,7 @@
   border: 2px solid var(--border);
   border-radius: 55px;
   outline: none;
-  background-color: rgba(255, 255, 255, 0);
+  background-color: transparent;
   color: var(--text-secondary);
   transition:
     border-color 0.3s,
@@ -124,8 +118,9 @@
 
 .search-bar input:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 8px var(--shadow);
 }
+
 .welcome-text {
   font-size: 14px;
   color: var(--text-secondary);
@@ -145,8 +140,8 @@
 /* Sidebar */
 .sidebar {
   padding: 20px;
-  background-color: #1a1a1a;
-  color: #ffffff;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
   width: 220px;
@@ -154,8 +149,14 @@
   position: fixed;
   top: 0;
   left: 0;
-  transition: transform 0.3s ease-in-out; /* Animação para abrir/fechar */
+  transition: transform 0.3s ease-in-out;
   z-index: 1000;
+  overflow-y: auto; /* Permite scroll se o conteúdo exceder */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer e Edge */
+}
+.sidebar::-webkit-scrollbar {
+  display: none;
 }
 
 .sidebar-content {
@@ -174,7 +175,7 @@
 .sidebar-title {
   font-size: 24px;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary);
   text-align: center;
   margin-bottom: 10px;
   word-wrap: break-word;
@@ -196,7 +197,7 @@
   padding: 10px 9px;
   font-size: 16px;
   font-weight: 400;
-  color: #ffffff;
+  color: var(--text-primary);
   cursor: pointer;
   text-align: left;
   display: flex;
@@ -210,7 +211,7 @@
 }
 
 .sidebar-btn:hover {
-  background-color: #2c2c2c;
+  background-color: var(--button-bg);
 }
 
 .sidebar-icon {
@@ -231,15 +232,15 @@
   gap: 10px;
   margin-top: 20px;
   padding: 10px;
-  background-color: #2c2c2c;
+  background-color: var(--button-bg);
   border-radius: 8px;
 }
 
 .user-initials {
   width: 40px;
   height: 40px;
-  background-color: #4a4a4a;
-  color: #ffffff;
+  background-color: var(--accent);
+  color: var(--text-primary);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -250,14 +251,14 @@
 
 .user-type {
   font-size: 14px;
-  color: #adb5bd;
+  color: var(--text-secondary);
   flex-grow: 1;
 }
 
 .logout-btn {
   background: none;
   border: none;
-  color: #ffffff;
+  color: var(--text-primary);
   cursor: pointer;
   font-size: 18px;
 }
@@ -268,7 +269,7 @@
   padding: 20px;
   overflow-y: auto;
   margin-left: 220px;
-  background-color: #f5f5f5;
+  background-color: transparent;
 }
 
 /* Bottom Bar (para dispositivos móveis) */
@@ -372,7 +373,7 @@
 .product-card button {
   padding: 6px 12px;
   background-color: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
   border: none;
   border-radius: 6px;
   font-size: 12px;
@@ -482,7 +483,7 @@
 .modal-content input:focus,
 .modal-content textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 8px rgba(52, 152, 219, 0.2);
+  box-shadow: 0 0 8px var(--shadow);
   outline: none;
 }
 
@@ -503,7 +504,7 @@
   gap: 8px;
   padding: 12px 20px;
   background-color: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
   border-radius: 8px;
   font-size: 16px;
   font-weight: 600;
@@ -548,13 +549,12 @@
 
 .form-buttons button[type='submit'] {
   background-color: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .form-buttons button[type='button'] {
   background-color: var(--button-bg);
   color: var(--text-secondary);
-  border: 1px solid var(--border);
 }
 
 .form-buttons button:hover {
@@ -570,9 +570,8 @@
 }
 
 .modal-content button {
-  /*padding: 10px 20px;*/
   background-color: var(--accent);
-  color: #fff;
+  color: var(--text-primary);
   border: none;
   border-radius: 8px;
   font-size: 14px;
@@ -623,26 +622,26 @@
   .header-content {
     margin-left: 0;
     padding: 0 10px;
-    justify-content: flex-start; /* Alinha o botão e o search-bar à esquerda */
+    justify-content: flex-start;
   }
   .menu-btn {
-    display: block; /* Mostra o botão de menu em mobile */
+    display: block;
   }
 
   .search-bar {
-    min-width: 250px; /* Ajusta a largura mínima para telas menores */
-    width: 100%; /* Garante que ela ocupe o espaço disponível */
+    min-width: 250px;
+    width: 100%;
   }
 
   .product-area {
-    margin-left: 0; /* Remove o margin-left em telas menores */
+    margin-left: 0;
   }
   .sidebar {
-    transform: translateX(-100%); /* Esconde a sidebar por padrão em mobile */
+    transform: translateX(-100%);
   }
 
   .sidebar-open {
-    transform: translateX(0); /* Mostra a sidebar quando aberta */
+    transform: translateX(0);
   }
 
   .product-area {
@@ -694,4 +693,3 @@
 .Toastify__close-button {
   display: none !important;
 }
-

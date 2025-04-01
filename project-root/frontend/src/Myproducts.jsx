@@ -146,11 +146,6 @@ export default function Myproducts() {
         autoClose={3000}
         hideProgressBar={false}
       />
-      <header className="my-products-header">
-        <div className="header-content">
-          {user && <span className="welcome-text">Bem-vindo, {user.name}</span>}
-        </div>
-      </header>
 
       <div className="my-products-content">
         <aside className="sidebar">
