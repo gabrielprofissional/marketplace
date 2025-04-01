@@ -22,7 +22,7 @@ export default function Admin() {
     logoUrl: null,
     faviconUrl: null,
   })
-  const [newSiteName, setNewSiteName] = useState('')
+  const [newSiteName, setNewSiteName] = useState('') // Sempre string, nunca null
   const [newLogo, setNewLogo] = useState(null)
   const [newFavicon, setNewFavicon] = useState(null)
   const navigate = useNavigate()
@@ -48,7 +48,7 @@ export default function Admin() {
     try {
       const response = await axios.get('http://localhost:5000/admin/settings')
       setSettings(response.data)
-      setNewSiteName(response.data.siteName || '')
+      setNewSiteName(response.data.siteName || '') // Usa '' se siteName for null
     } catch (error) {
       console.error('Erro ao buscar configurações:', error)
       toast.error('Erro ao carregar configurações.')
@@ -110,7 +110,7 @@ export default function Admin() {
   const handleUpdateSettings = async (e) => {
     e.preventDefault()
     const formData = new FormData()
-    formData.append('siteName', newSiteName) // Sempre envia, mesmo vazio
+    formData.append('siteName', newSiteName) // newSiteName já é string
     if (newLogo) formData.append('logo', newLogo)
     if (newFavicon) formData.append('favicon', newFavicon)
 
@@ -123,12 +123,12 @@ export default function Admin() {
         }
       )
       console.log('Resposta do backend:', response.data)
-      setSettings(response.data.settings) // Atualiza o estado com o retorno
-      setNewSiteName(response.data.settings.siteName) // Garante que o input reflita o valor retornado
+      setSettings(response.data.settings)
+      setNewSiteName(response.data.settings.siteName || '') // Garante string
       setNewLogo(null)
       setNewFavicon(null)
       toast.success('Configurações atualizadas com sucesso!')
-      fetchSettings() // Recarrega as configurações
+      fetchSettings() // Recarrega
     } catch (error) {
       console.error('Erro ao atualizar configurações:', error)
       toast.error('Erro ao atualizar configurações.')

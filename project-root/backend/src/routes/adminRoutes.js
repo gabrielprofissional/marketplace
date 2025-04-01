@@ -17,7 +17,7 @@ router.get('/users', authenticateAdmin, getUsers)
 router.post('/users/:id/ban', authenticateAdmin, banUser)
 router.post('/users/:id/unban', authenticateAdmin, unbanUser)
 router.delete('/products/:id', authenticateAdmin, deleteProductAdmin)
-router.get('/settings', authenticateAdmin, getSettings)
+router.get('/settings', getSettings) // Sem authenticateAdmin
 router.put(
   '/settings',
   authenticateAdmin,

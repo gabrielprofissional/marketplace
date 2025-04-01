@@ -96,14 +96,21 @@ export const deleteProductAdmin = async (req, res) => {
 
 export const getSettings = async (req, res) => {
   try {
-    const settings = await SettingsModel.getOrCreate()
-    res.json(settings)
+    const settings = await prisma.settings.findFirst()
+    if (!settings) {
+      // Se não tem registro, cria um vazio ou retorna objeto vazio
+      return res.json({
+        siteName: null, // Ou '' se preferir string vazia
+        logoUrl: null,
+        faviconUrl: null,
+      })
+    }
+    res.json(settings) // Retorna o que vier do banco, mesmo que siteName seja null
   } catch (error) {
-    console.error('Erro ao buscar configurações:', error)
-    res.status(500).json({ error: 'Erro interno do servidor' })
+    console.error('Erro ao buscar settings:', error)
+    res.status(500).json({ error: 'Erro ao buscar configurações' })
   }
 }
-
 export const updateSettings = async (req, res) => {
   try {
     console.log('Requisição recebida:', { body: req.body, files: req.files })
