@@ -293,7 +293,7 @@
   }
 
   .sidebar {
-    position: static; /* Remove a posição fixa em mobile */
+    position: absolute; /* Remove a posição fixa em mobile */
     width: 100%;
     height: auto;
     padding: 10px;
